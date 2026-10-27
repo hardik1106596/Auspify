@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect ,useMemo, useState } from 'react';
+import { Link, Route, Routes } from 'react-router-dom';
+import AdminDashboard from './admin/AdminDashboard.jsx';
 import {
   ArrowRight,
   BadgeCheck,
@@ -22,7 +23,8 @@ import {
   UserRound,
   X,
 } from 'lucide-react';
-import { categories, products } from './data';
+
+import { categories, products as demoProducts } from './data';
 
 const navigationLinks = [
   ['Home', '#home'],
@@ -665,9 +667,12 @@ function CheckoutModal({
   );
 }
 
-export default function App() {
+function Storefront() {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
+  const [products, setProducts] = useState([]);
+  const [productsLoading, setProductsLoading] = useState(true);
+  const [productsError, setProductsError] = useState('');
   const [cart, setCart] = useState([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [wishes, setWishes] = useState([]);
@@ -675,25 +680,66 @@ export default function App() {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
 
-  const filteredProducts = useMemo(
-    () =>
-      products.filter(
-        (product) =>
-          (category === 'All' || product.category === category) &&
-          product.name.toLowerCase().includes(search.toLowerCase()),
-      ),
-    [category, search],
-  );
-  const cartCount = cart.reduce((total, item) => total + item.qty, 0);
-  const subtotal = cart.reduce(
-    (total, item) => total + item.price * item.qty,
-    0,
-  );
+useEffect(() => {
+    async function fetchProducts() {
+      try {
+        const response = await fetch("http://localhost:5000/api/products");
+
+        if (!response.ok) {
+          throw new Error("Unable to load products.");
+        }
+
+        const data = await response.json();
+
+        setProducts([
+          ...demoProducts.map((product) => ({
+            ...product,
+            source: "demo",
+          })),
+          ...data.map((product) => ({
+            ...product,
+            id: product._id,
+            oldPrice: product.price,
+            rating: 4.5,
+            reviews: 0,
+            tag: product.featured ? "Featured" : "",
+            source: "database",
+          })),
+        ]);
+
+        setProductsError("");
+      } catch (error) {
+        setProductsError(error.message || "Unable to load products.");
+      } finally {
+        setProductsLoading(false);
+      }
+    }
+
+    fetchProducts();
+  }, []);
+
+
+ const filteredProducts = useMemo(
+  () =>
+    products.filter(
+      (product) =>
+        (category === 'All' || product.category === category) &&
+        product.name.toLowerCase().includes(search.toLowerCase()),
+    ),
+  [products, category, search],
+);
+
 
   function notify(message) {
     setToast(message);
     window.setTimeout(() => setToast(''), 2200);
   }
+
+  const cartCount = cart.reduce(
+  (total, item) => total + (item.quantity || 1),
+  0
+);
+
 
   function addToCart(product) {
     setCart((currentCart) =>
@@ -751,16 +797,31 @@ export default function App() {
       <main>
         <HeroSection />
         <CategorySection category={category} setCategory={setCategory} />
-        <ProductsSection
-          category={category}
-          filteredProducts={filteredProducts}
-          onAdd={addToCart}
-          onWish={toggleWishlist}
-          wishes={wishes}
-          search={search}
-          setCategory={setCategory}
-          setSearch={setSearch}
-        />
+        {productsLoading ?
+        (
+          <section className="products-section section-wrap">
+            <h2>Loading products...</h2>
+          </section>
+        ) :
+        productsError ?
+        (
+          <section className="products-section section-wrap">
+            <h2>Could not load products</h2>
+            <p>{productsError}</p>
+          </section>
+        ):
+        (
+          <ProductsSection
+            category={category}
+            filteredProducts={filteredProducts}
+            onAdd={addToCart}
+            onWish={toggleWishlist}
+            wishes={wishes}
+            search={search}
+            setCategory={setCategory}
+            setSearch={setSearch}
+          />
+        )}
         <PromoSection setCategory={setCategory} />
         <BenefitsSection />
       </main>
@@ -797,5 +858,16 @@ export default function App() {
         </div>
       )}
     </div>
+  );
+}
+
+
+
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<Storefront />} />
+      <Route path="/admin" element={<AdminDashboard />} />
+    </Routes>
   );
 }

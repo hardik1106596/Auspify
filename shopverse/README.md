@@ -1,26 +1,31 @@
-# ShopVerse
+# ShopVerse 🛍️
 
-Responsive e-commerce storefront built with React, Vite and custom CSS. This starter includes category filtering, product search, wishlist toggles, a client-side cart with quantity controls, and a demo checkout. The Express/MongoDB backend currently has a health endpoint and database connection starter.
+A modern, responsive e-commerce platform built with **React, Vite, Node.js, Express, and MongoDB**.
 
-## Frontend
+### Features
+- Customer storefront with product search and category filters
+- Wishlist and shopping cart
+- Admin dashboard to add, edit, and delete products
+- MongoDB integration for product management
+
+### Run Locally
 ```powershell
 npm install
 npm run dev
 ```
-Open http://localhost:5173.
 
-## Backend
-Open another terminal:
+Start the backend in a separate terminal:
 ```powershell
 cd server
 npm install
-Copy-Item .env.example .env
-```
-Edit `server/.env`, choose a unique JWT secret of at least 32 characters, and run:
-```powershell
 npm run dev
 ```
-Health check: http://localhost:5000/api/health
 
-## Status
-This is a learning starter, not production-ready. Authentication, database-backed product APIs, persistent orders, admin tools, automated tests and real payment integration remain to be implemented. Checkout is a demo and never processes payment. Never commit `.env` files or secrets.
+### Application Links
+- **Storefront:** http://localhost:5173
+- **Admin Dashboard:** http://localhost:5173/admin
+- **API Health:** http://localhost:5000/api/health
+
+*Note: Development links work locally. Admin authentication and real payment processing are not yet implemented.*
+
+**ShopVerse — Discover Your Everyday Finds.**
