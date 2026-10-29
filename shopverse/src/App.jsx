@@ -1,6 +1,12 @@
 import { useEffect ,useMemo, useState } from 'react';
 import { Link, Route, Routes } from 'react-router-dom';
 import AdminDashboard from './admin/AdminDashboard.jsx';
+import Login from './pages/Login.jsx';
+import Register from './pages/Register.jsx';
+import Profile from './pages/Profile.jsx';
+import Orders from './pages/Orders.jsx';
+import ProtectedRoute from './components/ProtectedRoute.jsx';
+import { useAuth } from './auth/AuthContext.jsx';
 import {
   ArrowRight,
   BadgeCheck,
@@ -43,6 +49,7 @@ const formatPrice = (amount) =>
 
 function Header({ cartCount, onCart, search, setSearch }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user } = useAuth();
 
   return (
     <>
@@ -107,13 +114,13 @@ function Header({ cartCount, onCart, search, setSearch }) {
             <ShoppingCart />
             <span className="cart-count">{cartCount}</span>
           </button>
-          <button className="profile-button">
+          <Link className="profile-button" to={user ? '/profile' : '/login'}>
             <span className="avatar">
               <UserRound size={17} />
             </span>
-            <span>Hi, Shopper</span>
+            <span>Hi, {user?.name?.split(' ')[0] || 'Shopper'}</span>
             <ChevronDown size={14} />
-          </button>
+          </Link>
         </div>
       </header>
 
@@ -637,22 +644,36 @@ function CheckoutModal({
               <span>Order total</span>
               <strong>{formatPrice(subtotal)}</strong>
             </div>
+
             <label>
               Full name
-              <input required placeholder="Your name" />
+              <input
+                name="fullName"
+                required
+                placeholder="Your name"
+              />
             </label>
+
             <label>
               Email address
-              <input required type="email" placeholder="you@example.com" />
+              <input
+                name="email"
+                required
+                type="email"
+                placeholder="you@example.com"
+              />
             </label>
+
             <label>
               Delivery address
               <textarea
+                name="shippingAddress"
                 required
                 placeholder="House number, street, city, PIN code"
                 rows="3"
               />
             </label>
+
             <div className="demo-notice">
               <ShieldCheck size={16} /> Demo checkout only. No real payment is
               processed.
@@ -680,6 +701,16 @@ function Storefront() {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
 
+  const subtotal = cart.reduce(
+  (total, item) => total + item.price * (item.qty || 1),
+  0
+);
+
+const cartCount = cart.reduce(
+  (total, item) => total + (item.qty || 1),
+  0
+);
+
 useEffect(() => {
     async function fetchProducts() {
       try {
@@ -691,21 +722,17 @@ useEffect(() => {
 
         const data = await response.json();
 
-        setProducts([
-          ...demoProducts.map((product) => ({
-            ...product,
-            source: "demo",
-          })),
-          ...data.map((product) => ({
-            ...product,
-            id: product._id,
-            oldPrice: product.price,
-            rating: 4.5,
-            reviews: 0,
-            tag: product.featured ? "Featured" : "",
-            source: "database",
-          })),
-        ]);
+       setProducts(
+        data.map((product) => ({
+          ...product,
+          id: product._id,
+          oldPrice: product.oldPrice ?? product.price,
+          rating: product.rating ?? 4.5,
+          reviews: product.reviews ?? 0,
+          tag: product.featured ? "Featured" : "",
+          source: "database",
+        }))
+      );
 
         setProductsError("");
       } catch (error) {
@@ -735,10 +762,6 @@ useEffect(() => {
     window.setTimeout(() => setToast(''), 2200);
   }
 
-  const cartCount = cart.reduce(
-  (total, item) => total + (item.quantity || 1),
-  0
-);
 
 
   function addToCart(product) {
@@ -772,11 +795,61 @@ useEffect(() => {
     }
   }
 
-  function placeOrder(event) {
+
+async function placeOrder(event)
+{
     event.preventDefault();
-    setOrderPlaced(true);
-    setCart([]);
+
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+
+    const fullName = formData.get("fullName")?.trim();
+    const email = formData.get("email")?.trim();
+    const shippingAddress = formData.get("shippingAddress")?.trim();
+
+    const token = localStorage.getItem("shopverse-token");
+
+    if (!token) {
+      setCheckoutOpen(false);
+      window.location.href = "/login";
+      return;
+    }
+
+    if (!fullName || !email || !shippingAddress || cart.length === 0) {
+      notify("Please complete checkout details and add items.");
+      return;
+    }
+
+    try {
+      const response = await fetch("http://localhost:5000/api/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          items: cart.map((item) => ({
+            product: item.id,
+            quantity: item.qty,
+          })),
+          shippingAddress,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Could not place order.");
+      }
+
+      setOrderPlaced(true);
+      setCart([]);
+      notify("Order saved successfully!");
+    } catch (error) {
+      notify(error.message || "Could not place order.");
+    }
   }
+
 
   function toggleWishlist(id) {
     setWishes((currentWishes) =>
@@ -868,6 +941,12 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Storefront />} />
       <Route path="/admin" element={<AdminDashboard />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route element={<ProtectedRoute />}>
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/orders" element={<Orders />} />
+      </Route>
     </Routes>
   );
 }

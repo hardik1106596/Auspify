@@ -3,10 +3,16 @@ import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import productRoutes from "./routes/productRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
+import userRoutes from "./routes/userRoutes.js";
+import orderRoutes from "./routes/orderRoutes.js";
 
 const app = express();
 app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }));
 app.use(express.json());
+app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/orders", orderRoutes);
 
 app.get('/api/health', (_req, res) =>
               res.json({ ok: true, service: 'ShopVerse API', database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected' }));
