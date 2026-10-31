@@ -8,7 +8,7 @@ A collection of four web application projects developed as part of my Full Stack
 |---|---|---|
 | 03 | Expense Tracker Web Application | Track income, expenses, and financial summaries. |
 | 04 | E-Commerce Website | Browse products, manage a shopping cart, and handle orders. |
-| 05 | Job Portal Web Application | Connect job seekers with employment opportunities. |
+| 05 | [CareerConnect Job Portal](./careerconnect/) | Search, filter, and save employment opportunities. |
 | 06 | Learning Management System | Provide an online platform for courses and learning resources. |
 
 ---
@@ -44,7 +44,7 @@ An online shopping application that allows users to explore products and manage 
 
 ## Task 05 — Job Portal Web Application
 
-A web application designed to help job seekers discover opportunities and enable employers to manage job listings.
+A responsive job-search frontend designed to help job seekers discover and explore opportunities.
 
 **Key Features**
 - User registration and login
@@ -55,7 +55,9 @@ A web application designed to help job seekers discover opportunities and enable
 - Submit job applications
 - Manage application status
 
-**Technologies:** React.js, CSS3, Node.js, Express.js, MongoDB
+**Technologies:** React.js, CSS3, Vite
+
+See the [CareerConnect README](./careerconnect/README.md) for setup instructions.
 
 ## Task 06 — Learning Management System
 
@@ -89,6 +91,7 @@ An online learning platform designed to organize educational content and help le
 ```text
 internship-projects/
 ├── expense-tracker/
+├── careerconnect/
 ├── ecommerce-website/
 ├── job-portal/
 ├── learning-management-system/
