@@ -1,101 +1,52 @@
-# CareerConnect — MERN Job Portal
+# CareerConnect – MERN Job Portal
 
-A clean, distinctive job portal starter for job seekers, employers and administrators.
+Job seekers browse and apply; employers post jobs and manage applicants.
 
-## Stack
-- React + Vite + React Router
-- Custom responsive CSS (no template UI)
-- Node.js + Express
-- MongoDB + Mongoose (inspect data in MongoDB Compass)
-- JWT authentication + bcrypt password hashing
-
-## Requirements
-- Node.js 20+
-- MongoDB Community Server running locally OR a MongoDB Atlas URI
-- MongoDB Compass (optional GUI)
+**Stack:** React + Vite + React Router, custom CSS, Node.js + Express 5, MongoDB + Mongoose, JWT auth, password hashing with bcryptjs.
+**Requires:** Node.js 20+, MongoDB Community Server (local) or a MongoDB Atlas URI. MongoDB Compass is optional.
 
 ## 1. Install
-
-Open two terminals from the project root.
-
-### Backend
 ```bash
-cd server
-npm install
-copy .env.example .env
+cd server && npm install && cp .env.example .env     # Windows: copy .env.example .env
+cd ../client && npm install
 ```
-On macOS/Linux use `cp .env.example .env`.
+Edit `server/.env`: set `MONGO_URI` and a long random `JWT_SECRET`.
+(Generate one: `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`)
 
-Edit `server/.env` and set `MONGO_URI` and a long random `JWT_SECRET`.
-
-### Frontend
+## 2. Run (two terminals)
 ```bash
-cd client
-npm install
+cd server && npm run dev     # API on http://localhost:5000
+cd client && npm run dev     # App on http://localhost:5173
 ```
 
-## 2. Run
-
-Terminal 1:
-```bash
-cd server
-npm run dev
-```
-
-Terminal 2:
-```bash
-cd client
-npm run dev
-```
-
-Open the Vite URL (normally http://localhost:5173).
-
-## 3. MongoDB Compass
-
-For local MongoDB, connect Compass to:
-`mongodb://127.0.0.1:27017`
-
-The application creates the `careerconnect` database and collections when the first documents are written:
-- `users`
-- `jobs`
-- `applications`
-
-Set `MONGO_URI=mongodb://127.0.0.1:27017/careerconnect` in `server/.env`.
-
-For Atlas, paste your Atlas connection string into `MONGO_URI` and use the same URI in Compass.
+## 3. Compass
+Connect to `mongodb://127.0.0.1:27017`. The `careerconnect` database with `users`, `jobs` and `applications` is created on first write.
 
 ## 4. Seed sample jobs
-
-After starting the backend once, run:
 ```bash
-cd server
-npm run seed
+cd server && npm run seed
 ```
+Creates a sample employer (random password, cannot log in) and 6 jobs. No admin account is created.
 
-This inserts sample jobs. It does not create a default admin account.
+## 5. Roles
+- `seeker`: browse and apply. `employer`: post/close/delete jobs, review applicants and set status.
+- `admin` is not selectable at signup. Create one manually in MongoDB for local development only.
 
-## 5. Roles and workflows
-
-- Register as `seeker` to browse and apply for jobs.
-- Register as `employer` to create and manage job posts.
-- Admin role is intentionally not publicly selectable. Create an admin manually in MongoDB only for a trusted local development environment, or add a protected admin provisioning flow before production.
-
-## API overview
-
+## API
 | Method | Endpoint | Access |
 |---|---|---|
 | POST | `/api/auth/register` | Public |
 | POST | `/api/auth/login` | Public |
 | GET | `/api/auth/me` | Logged in |
-| GET | `/api/jobs` | Public |
+| GET | `/api/jobs` (`q`, `location`, `type`, `page`) | Public |
+| GET | `/api/jobs/mine` | Employer |
 | GET | `/api/jobs/:id` | Public |
 | POST | `/api/jobs` | Employer |
-| PATCH | `/api/jobs/:id` | Owner employer |
-| DELETE | `/api/jobs/:id` | Owner employer |
+| PATCH / DELETE | `/api/jobs/:id` | Owner employer |
 | POST | `/api/applications/:jobId` | Seeker |
 | GET | `/api/applications/mine` | Seeker |
 | GET | `/api/applications/received` | Employer |
-| PATCH | `/api/applications/:id/status` | Employer |
+| PATCH | `/api/applications/:id/status` | Employer (owner of job) |
 
-## Important before deployment
-This is a learning/MVP foundation, not a production-hardened hiring platform. Add email verification, password reset, rate limiting, request validation, file storage for resumes, audit logs, moderation, stronger admin provisioning, security headers, and tests before public launch. Never commit `.env`.
+## Production
+Build the client with `npm run build` and host `client/dist`; set `VITE_API_URL` and `CLIENT_URL`. This is an MVP foundation: add email verification, password reset, rate limiting, schema validation, resume storage, audit logs, moderation, admin provisioning and tests before public launch. Never commit `.env`.

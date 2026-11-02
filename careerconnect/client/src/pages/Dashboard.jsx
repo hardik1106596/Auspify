@@ -1,28 +1,149 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { ArrowUpRight, BriefcaseBusiness, Clock3, CheckCircle2 } from "lucide-react";
-import Navbar from "../components/Navbar";
-import { useAuth } from "../context/AuthContext";
-import api from "../api";
-import JobCard from "../components/JobCard";
+import { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { api, fmtDate, JOB_TYPES, STATUSES } from '../api.js';
+import { useAuth } from '../AuthContext.jsx';
 
-export function SeekerDashboard(){
-  const {user}=useAuth(); const [apps,setApps]=useState([]); const [jobs,setJobs]=useState([]);
-  useEffect(()=>{api.get("/applications/mine").then(r=>setApps(r.data.applications)).catch(()=>{});api.get("/jobs").then(r=>setJobs(r.data.jobs.slice(0,3))).catch(()=>{});},[]);
-  return <><Navbar/><main className="page-shell dashboard-shell"><div className="page-kicker">YOUR SPACE / JOB SEEKER</div><div className="dashboard-welcome"><div><h1>Keep your next move <em>moving.</em></h1><p>Welcome back, {user?.name?.split(" ")[0]||"there"}. Here's where things stand.</p></div><Link to="/jobs" className="button button-dark">Explore jobs <ArrowUpRight size={16}/></Link></div><div className="stat-grid"><div className="stat-card"><span>APPLICATIONS SENT</span><strong>{apps.length}</strong><small><BriefcaseBusiness size={14}/> Your opportunities</small></div><div className="stat-card"><span>IN REVIEW</span><strong>{apps.filter(a=>a.status==="reviewing").length}</strong><small><Clock3 size={14}/> Being considered</small></div><div className="stat-card"><span>SHORTLISTED</span><strong>{apps.filter(a=>a.status==="shortlisted").length}</strong><small><CheckCircle2 size={14}/> Moving forward</small></div></div><div className="dashboard-section-title"><h2>Your applications</h2><span>Most recent first</span></div>{apps.length?<div className="application-list">{apps.map(a=><div className="application-row" key={a._id}><div><b>{a.job?.title||"Job removed"}</b><small>{a.job?.company||"Company"} · Applied {new Date(a.createdAt).toLocaleDateString()}</small></div><span className={`status status-${a.status}`}>{a.status}</span></div>)}</div>:<div className="empty-inline">No applications yet. Your next move is waiting. <Link to="/jobs">Explore open roles <ArrowUpRight size={14}/></Link></div>}<div className="dashboard-section-title"><h2>Opportunities to explore</h2><Link to="/jobs">View all <ArrowUpRight size={14}/></Link></div><div className="job-list">{jobs.map((j,i)=><JobCard key={j._id} job={j} index={i}/>)}</div></main></>;
+function SeekerView() {
+  const [apps, setApps] = useState(null);
+  const [err, setErr] = useState('');
+  useEffect(() => {
+    api('/applications/mine').then((d) => setApps(d.applications)).catch((e) => setErr(e.message));
+  }, []);
+  if (err) return <p className="error">{err}</p>;
+  if (!apps) return <p className="note">Loading…</p>;
+  return (
+    <>
+      <h1>My applications</h1>
+      {apps.length === 0 && <p className="note">You have not applied yet. <Link to="/">Browse open roles</Link></p>}
+      <ul className="board">
+        {apps.map((a) => (
+          <li key={a._id} className="row plain">
+            <div className="inner">
+              <div>
+                <h2>{a.job ? <Link to={`/jobs/${a.job._id}`}>{a.job.title}</Link> : 'Job removed'}</h2>
+                <p>{a.job?.company} – applied {fmtDate(a.createdAt)}</p>
+              </div>
+              <span className={`status ${a.status}`}>{a.status}</span>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </>
+  );
 }
 
-export function EmployerDashboard(){
-  const {user}=useAuth();const [jobs,setJobs]=useState([]);const [apps,setApps]=useState([]);const [show,setShow]=useState(false);const [message,setMessage]=useState("");
-  const [form,setForm]=useState({title:"",company:"",location:"",type:"Full-time",workMode:"Hybrid",category:"Engineering",salary:"",description:"",requirements:""});
-  const load=()=>{api.get("/jobs/mine").then(r=>setJobs(r.data.jobs)).catch(()=>{});api.get("/applications/received").then(r=>setApps(r.data.applications)).catch(()=>{});};
-  useEffect(()=>{load();},[]);
-  const submit=async e=>{e.preventDefault();setMessage("");try{await api.post("/jobs",{...form,requirements:form.requirements.split(",").map(x=>x.trim()).filter(Boolean)});setShow(false);setForm({title:"",company:"",location:"",type:"Full-time",workMode:"Hybrid",category:"Engineering",salary:"",description:"",requirements:""});load();}catch(err){setMessage(err.response?.data?.message||"Could not create job.");}};
-  const status=async(id,value)=>{try{await api.patch(`/applications/${id}/status`,{status:value});load();}catch{setMessage("Could not update application.");}};
-  return <><Navbar/><main className="page-shell dashboard-shell"><div className="page-kicker">YOUR SPACE / EMPLOYER</div><div className="dashboard-welcome"><div><h1>Build a team that <em>moves.</em></h1><p>Welcome, {user?.name}. Find the people behind the potential.</p></div><button className="button button-dark" onClick={()=>setShow(!show)}>{show?"Close form":"Post a job"} <ArrowUpRight size={16}/></button></div>
-  {show&&<form className="job-form" onSubmit={submit}><h2>Create an opportunity</h2><div className="form-grid"><label>Job title<input required value={form.title} onChange={e=>setForm({...form,title:e.target.value})}/></label><label>Company<input required value={form.company} onChange={e=>setForm({...form,company:e.target.value})}/></label><label>Location<input required value={form.location} onChange={e=>setForm({...form,location:e.target.value})}/></label><label>Salary<input value={form.salary} onChange={e=>setForm({...form,salary:e.target.value})} placeholder="₹8–12 LPA"/></label><label>Job type<select value={form.type} onChange={e=>setForm({...form,type:e.target.value})}><option>Full-time</option><option>Part-time</option><option>Contract</option><option>Internship</option></select></label><label>Work mode<select value={form.workMode} onChange={e=>setForm({...form,workMode:e.target.value})}><option>Hybrid</option><option>Remote</option><option>On-site</option></select></label></div><label>Description<textarea required rows="5" value={form.description} onChange={e=>setForm({...form,description:e.target.value})}/></label><label>Requirements (comma separated)<input value={form.requirements} onChange={e=>setForm({...form,requirements:e.target.value})}/></label>{message&&<p className="form-error">{message}</p>}<button className="button button-dark">Publish job</button></form>}
-  <div className="stat-grid"><div className="stat-card"><span>LIVE JOBS</span><strong>{jobs.length}</strong><small>Roles you've posted</small></div><div className="stat-card"><span>APPLICANTS</span><strong>{apps.length}</strong><small>People interested</small></div><div className="stat-card"><span>TO REVIEW</span><strong>{apps.filter(a=>a.status==="pending").length}</strong><small>Waiting for a decision</small></div></div>
-  <div className="dashboard-section-title"><h2>Your job posts</h2></div>{jobs.length?jobs.map((j,i)=><JobCard key={j._id} job={j} index={i}/>):<div className="empty-inline">No jobs posted yet. Create your first opportunity above.</div>}
-  <div className="dashboard-section-title"><h2>Recent applicants</h2></div>{apps.length?apps.map(a=><div className="application-row" key={a._id}><div><b>{a.seeker?.name}</b><small>{a.job?.title} · {a.seeker?.email}</small></div><div className="app-actions"><span className={`status status-${a.status}`}>{a.status}</span><select value={a.status} onChange={e=>status(a._id,e.target.value)}><option value="pending">Pending</option><option value="reviewing">Reviewing</option><option value="shortlisted">Shortlist</option><option value="rejected">Reject</option></select></div></div>):<div className="empty-inline">Applicants will appear here when candidates apply.</div>}
-  </main></>;
+const blank = { title: '', location: '', type: 'Full-time', salary: '', skills: '', description: '' };
+
+function EmployerView({ user }) {
+  const [tab, setTab] = useState('apps');
+  const [jobs, setJobs] = useState([]);
+  const [apps, setApps] = useState([]);
+  const [form, setForm] = useState(blank);
+  const [msg, setMsg] = useState({ type: '', text: '' });
+
+  const load = useCallback(async () => {
+    try {
+      const [j, a] = await Promise.all([api('/jobs/mine'), api('/applications/received')]);
+      setJobs(j.jobs);
+      setApps(a.applications);
+    } catch (e) {
+      setMsg({ type: 'error', text: e.message });
+    }
+  }, []);
+  useEffect(() => { load(); }, [load]);
+
+  const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
+  const run = async (fn, okText) => {
+    try { await fn(); setMsg({ type: 'ok', text: okText }); await load(); }
+    catch (e) { setMsg({ type: 'error', text: e.message }); }
+  };
+
+  const post = (e) => {
+    e.preventDefault();
+    run(async () => {
+      await api('/jobs', { method: 'POST', body: { ...form, company: user.company } });
+      setForm(blank);
+      setTab('jobs');
+    }, 'Job published');
+  };
+
+  return (
+    <>
+      <h1>Employer desk <small>{user.company}</small></h1>
+      <div className="tabs">
+        {[['apps', `Applications (${apps.length})`], ['jobs', `My jobs (${jobs.length})`], ['new', 'Post a job']].map(([k, l]) => (
+          <button key={k} className={tab === k ? 'on' : ''} onClick={() => { setTab(k); setMsg({ type: '', text: '' }); }}>{l}</button>
+        ))}
+      </div>
+      {msg.text && <p className={msg.type}>{msg.text}</p>}
+
+      {tab === 'apps' && (
+        <ul className="board">
+          {apps.length === 0 && <p className="note">No applications yet.</p>}
+          {apps.map((a) => (
+            <li key={a._id} className="row plain">
+              <div className="inner col">
+                <div className="split">
+                  <div>
+                    <h2>{a.seeker?.name || 'Deleted user'} <span className="muted">for {a.job?.title}</span></h2>
+                    <p>{a.seeker?.email && <a href={`mailto:${a.seeker.email}`}>{a.seeker.email}</a>} – {fmtDate(a.createdAt)}</p>
+                  </div>
+                  <select value={a.status} aria-label="Application status"
+                    onChange={(e) => run(() => api(`/applications/${a._id}/status`, { method: 'PATCH', body: { status: e.target.value } }), 'Status updated')}>
+                    {STATUSES.map((s) => <option key={s}>{s}</option>)}
+                  </select>
+                </div>
+                {a.coverLetter && <p className="letter">{a.coverLetter}</p>}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {tab === 'jobs' && (
+        <ul className="board">
+          {jobs.length === 0 && <p className="note">You have not posted a job yet.</p>}
+          {jobs.map((j) => (
+            <li key={j._id} className="row plain">
+              <div className="inner">
+                <div>
+                  <h2>{j.title}</h2>
+                  <p>{j.location} – {j.type} – {j.active ? 'Open' : 'Closed'}</p>
+                </div>
+                <div className="actions">
+                  <button className="btn ghost small" onClick={() => run(() => api(`/jobs/${j._id}`, { method: 'PATCH', body: { active: !j.active } }), j.active ? 'Job closed' : 'Job reopened')}>
+                    {j.active ? 'Close' : 'Reopen'}
+                  </button>
+                  <button className="btn danger small" onClick={() => window.confirm('Delete this job and its applications?') && run(() => api(`/jobs/${j._id}`, { method: 'DELETE' }), 'Job deleted')}>Delete</button>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {tab === 'new' && (
+        <form className="card" onSubmit={post}>
+          <label>Job title<input required maxLength="120" value={form.title} onChange={set('title')} /></label>
+          <div className="two">
+            <label>Location<input required value={form.location} onChange={set('location')} /></label>
+            <label>Type<select value={form.type} onChange={set('type')}>{JOB_TYPES.map((t) => <option key={t}>{t}</option>)}</select></label>
+          </div>
+          <div className="two">
+            <label>Salary (optional)<input value={form.salary} onChange={set('salary')} placeholder="e.g. ₹10–15 LPA" /></label>
+            <label>Skills (comma separated)<input value={form.skills} onChange={set('skills')} placeholder="React, Node.js" /></label>
+          </div>
+          <label>Description<textarea required rows="8" maxLength="5000" value={form.description} onChange={set('description')} /></label>
+          <button className="btn">Publish job</button>
+        </form>
+      )}
+    </>
+  );
+}
+
+export default function Dashboard() {
+  const { user } = useAuth();
+  if (user.role === 'seeker') return <SeekerView />;
+  if (user.role === 'employer') return <EmployerView user={user} />;
+  return <p className="note">Admin accounts have no dashboard in this starter. Add moderation tools before production.</p>;
 }
