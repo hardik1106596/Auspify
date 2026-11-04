@@ -1,5 +1,4 @@
-
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 import {
   LayoutDashboard,
   Package,
@@ -10,17 +9,17 @@ import {
   X,
   Search,
   ArrowLeft,
-} from "lucide-react";
-import { apiRequest } from "../api.js";
-import "./AdminDashboard.css";
+} from 'lucide-react';
+import { apiRequest } from '../api.js';
+import './AdminDashboard.css';
 
 const emptyForm = {
-  name: "",
-  description: "",
-  price: "",
-  category: "Electronics",
-  image: "",
-  stock: "0",
+  name: '',
+  description: '',
+  price: '',
+  category: 'Electronics',
+  image: '',
+  stock: '0',
   featured: false,
 };
 
@@ -29,21 +28,21 @@ export default function AdminDashboard() {
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
   const [showForm, setShowForm] = useState(false);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
+  const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
 
   async function loadProducts() {
     setLoading(true);
-    setError("");
+    setError('');
 
     try {
-      const data = await apiRequest("/products");
+      const data = await apiRequest('/products');
       setProducts(data);
     } catch (err) {
-      setError(err.message || "Unable to connect to the API.");
+      setError(err.message || 'Unable to connect to the API.');
     } finally {
       setLoading(false);
     }
@@ -56,24 +55,24 @@ export default function AdminDashboard() {
   function openAddForm() {
     setEditingId(null);
     setForm(emptyForm);
-    setError("");
-    setNotice("");
+    setError('');
+    setNotice('');
     setShowForm(true);
   }
 
   function openEditForm(product) {
     setEditingId(product._id);
     setForm({
-      name: product.name ?? "",
-      description: product.description ?? "",
-      price: String(product.price ?? ""),
-      category: product.category ?? "Electronics",
-      image: product.image ?? "",
+      name: product.name ?? '',
+      description: product.description ?? '',
+      price: String(product.price ?? ''),
+      category: product.category ?? 'Electronics',
+      image: product.image ?? '',
       stock: String(product.stock ?? 0),
       featured: Boolean(product.featured),
     });
-    setError("");
-    setNotice("");
+    setError('');
+    setNotice('');
     setShowForm(true);
   }
 
@@ -81,15 +80,15 @@ export default function AdminDashboard() {
     const { name, value, type, checked } = event.target;
     setForm((previous) => ({
       ...previous,
-      [name]: type === "checkbox" ? checked : value,
+      [name]: type === 'checkbox' ? checked : value,
     }));
   }
 
   async function saveProduct(event) {
     event.preventDefault();
     setSaving(true);
-    setError("");
-    setNotice("");
+    setError('');
+    setNotice('');
 
     try {
       const payload = {
@@ -102,64 +101,55 @@ export default function AdminDashboard() {
       if (
         !payload.name ||
         !payload.category.trim() ||
-        form.price.trim() === "" ||
+        form.price.trim() === '' ||
         !Number.isFinite(payload.price) ||
         payload.price < 0 ||
         !Number.isInteger(payload.stock) ||
         payload.stock < 0
       ) {
-        throw new Error(
-          "Enter a product name, category, valid price, and whole-number stock."
-        );
+        throw new Error('Enter a product name, category, valid price, and whole-number stock.');
       }
 
-      await apiRequest(
-        editingId ? `/products/${editingId}` : "/products",
-        { method: editingId ? "PUT" : "POST", body: payload }
-      );
+      await apiRequest(editingId ? `/products/${editingId}` : '/products', {
+        method: editingId ? 'PUT' : 'POST',
+        body: payload,
+      });
 
       setShowForm(false);
       setForm(emptyForm);
       setEditingId(null);
-      setNotice(editingId ? "Product updated." : "Product added.");
+      setNotice(editingId ? 'Product updated.' : 'Product added.');
       await loadProducts();
     } catch (err) {
-      setError(err.message || "Something went wrong.");
+      setError(err.message || 'Something went wrong.');
     } finally {
       setSaving(false);
     }
   }
 
   async function deleteProduct(product) {
-    const confirmed = window.confirm(
-      `Delete "${product.name}"? This cannot be undone.`
-    );
+    const confirmed = window.confirm(`Delete "${product.name}"? This cannot be undone.`);
 
     if (!confirmed) return;
 
-    setError("");
-    setNotice("");
+    setError('');
+    setNotice('');
 
     try {
-      await apiRequest(`/products/${product._id}`, { method: "DELETE" });
+      await apiRequest(`/products/${product._id}`, { method: 'DELETE' });
 
-      setNotice("Product deleted.");
+      setNotice('Product deleted.');
       await loadProducts();
     } catch (err) {
-      setError(err.message || "Could not delete product.");
+      setError(err.message || 'Could not delete product.');
     }
   }
 
   const visibleProducts = products.filter((product) =>
-    `${product.name} ${product.category}`
-      .toLowerCase()
-      .includes(search.toLowerCase())
+    `${product.name} ${product.category}`.toLowerCase().includes(search.toLowerCase()),
   );
 
-  const totalValue = products.reduce(
-    (sum, product) => sum + product.price * product.stock,
-    0
-  );
+  const totalValue = products.reduce((sum, product) => sum + product.price * product.stock, 0);
 
   return (
     <div className="admin-shell">
@@ -198,11 +188,7 @@ export default function AdminDashboard() {
             <h1>Dashboard</h1>
           </div>
 
-          <button
-            className="admin-secondary-button"
-            onClick={loadProducts}
-            disabled={loading}
-          >
+          <button className="admin-secondary-button" onClick={loadProducts} disabled={loading}>
             <RefreshCw size={16} />
             Refresh
           </button>
@@ -239,9 +225,9 @@ export default function AdminDashboard() {
             <span>Inventory value</span>
             <Package size={19} />
             <strong>
-              {totalValue.toLocaleString("en-IN", {
-                style: "currency",
-                currency: "INR",
+              {totalValue.toLocaleString('en-IN', {
+                style: 'currency',
+                currency: 'INR',
                 maximumFractionDigits: 0,
               })}
             </strong>
@@ -282,10 +268,7 @@ export default function AdminDashboard() {
               <Package size={36} />
               <h3>No products found</h3>
               <p>Add your first product or try another search.</p>
-              <button
-                className="admin-primary-button"
-                onClick={openAddForm}
-              >
+              <button className="admin-primary-button" onClick={openAddForm}>
                 <Plus size={17} />
                 Add your first product
               </button>
@@ -309,10 +292,7 @@ export default function AdminDashboard() {
                       <td>
                         <div className="admin-product-cell">
                           {product.image ? (
-                            <img
-                              src={product.image}
-                              alt={product.name}
-                            />
+                            <img src={product.image} alt={product.name} />
                           ) : (
                             <div className="admin-product-placeholder">
                               <Package size={20} />
@@ -320,26 +300,18 @@ export default function AdminDashboard() {
                           )}
                           <div>
                             <strong>{product.name}</strong>
-                            <small>
-                              {product.description || "No description"}
-                            </small>
+                            <small>{product.description || 'No description'}</small>
                           </div>
                         </div>
                       </td>
                       <td>{product.category}</td>
                       <td className="admin-price">
-                        ₹{Number(product.price).toLocaleString("en-IN")}
+                        ₹{Number(product.price).toLocaleString('en-IN')}
                       </td>
                       <td>{product.stock}</td>
                       <td>
-                        <span
-                          className={
-                            product.featured
-                              ? "admin-pill featured"
-                              : "admin-pill"
-                          }
-                        >
-                          {product.featured ? "Featured" : "Standard"}
+                        <span className={product.featured ? 'admin-pill featured' : 'admin-pill'}>
+                          {product.featured ? 'Featured' : 'Standard'}
                         </span>
                       </td>
                       <td>
@@ -389,9 +361,7 @@ export default function AdminDashboard() {
             <div className="admin-modal-heading">
               <div>
                 <p className="admin-eyebrow">PRODUCT CATALOG</p>
-                <h2 id="admin-form-title">
-                  {editingId ? "Edit product" : "Add a product"}
-                </h2>
+                <h2 id="admin-form-title">{editingId ? 'Edit product' : 'Add a product'}</h2>
               </div>
               <button
                 className="admin-icon-button"
@@ -455,12 +425,7 @@ export default function AdminDashboard() {
 
               <label>
                 Category *
-                <select
-                  name="category"
-                  value={form.category}
-                  onChange={updateField}
-                  required
-                >
+                <select name="category" value={form.category} onChange={updateField} required>
                   <option>Electronics</option>
                   <option>Fashion</option>
                   <option>Home & Living</option>
@@ -488,10 +453,10 @@ export default function AdminDashboard() {
                   src={form.image}
                   alt="Product preview"
                   onError={(event) => {
-                    event.currentTarget.style.display = "none";
+                    event.currentTarget.style.display = 'none';
                   }}
                   onLoad={(event) => {
-                    event.currentTarget.style.display = "block";
+                    event.currentTarget.style.display = 'block';
                   }}
                 />
               )}
@@ -515,16 +480,8 @@ export default function AdminDashboard() {
                 >
                   Cancel
                 </button>
-                <button
-                  type="submit"
-                  className="admin-primary-button"
-                  disabled={saving}
-                >
-                  {saving
-                    ? "Saving..."
-                    : editingId
-                      ? "Save changes"
-                      : "Add product"}
+                <button type="submit" className="admin-primary-button" disabled={saving}>
+                  {saving ? 'Saving...' : editingId ? 'Save changes' : 'Add product'}
                 </button>
               </div>
             </form>

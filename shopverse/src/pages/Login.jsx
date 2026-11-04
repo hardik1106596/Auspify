@@ -35,8 +35,12 @@ export default function Login() {
     <main className="auth-page">
       <section className="auth-card">
         <div className="auth-brand">
-          <span className="brand-mark"><ShoppingBag size={22} /></span>
-          <span>Shop<span>Verse</span></span>
+          <span className="brand-mark">
+            <ShoppingBag size={22} />
+          </span>
+          <span>
+            Shop<span>Verse</span>
+          </span>
         </div>
         <span className="eyebrow">WELCOME BACK</span>
         <h1>Good to see you again.</h1>
@@ -71,7 +75,11 @@ export default function Login() {
               />
             </span>
           </label>
-          {error && <p className="form-message form-error" role="alert">{error}</p>}
+          {error && (
+            <p className="form-message form-error" role="alert">
+              {error}
+            </p>
+          )}
           <button className="btn btn-dark full" type="submit" disabled={submitting}>
             {submitting ? 'Signing in...' : 'Sign in'} <ArrowRight size={16} />
           </button>

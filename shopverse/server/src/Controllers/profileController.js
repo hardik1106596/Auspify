@@ -1,4 +1,3 @@
-
 import User from "../models/User.js";
 
 // GET /api/users/profile
@@ -26,8 +25,7 @@ export const updateProfile = async (req, res) => {
   try {
     const { name, phone, address } = req.body;
 
-    if (typeof name !== "undefined" &&
-        (typeof name !== "string" || !name.trim())) {
+    if (typeof name !== "undefined" && (typeof name !== "string" || !name.trim())) {
       return res.status(400).json({
         message: "Name cannot be empty",
       });
@@ -39,8 +37,7 @@ export const updateProfile = async (req, res) => {
       });
     }
 
-    if (typeof address !== "undefined" &&
-        typeof address !== "string") {
+    if (typeof address !== "undefined" && typeof address !== "string") {
       return res.status(400).json({
         message: "Address must be a string",
       });
@@ -61,7 +58,7 @@ export const updateProfile = async (req, res) => {
     const user = await User.findByIdAndUpdate(
       req.user._id,
       { $set: updates },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     );
 
     res.status(200).json({

@@ -1,4 +1,4 @@
-import { useEffect ,useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, Route, Routes } from 'react-router-dom';
 import AdminDashboard from './admin/AdminDashboard.jsx';
 import Login from './pages/Login.jsx';
@@ -94,10 +94,7 @@ function Header({ cartCount, onCart, search, setSearch }) {
             aria-label="Search products"
           />
           {search && (
-            <button
-              onClick={() => setSearch('')}
-              aria-label="Clear search"
-            >
+            <button onClick={() => setSearch('')} aria-label="Clear search">
               <X size={15} />
             </button>
           )}
@@ -107,11 +104,7 @@ function Header({ cartCount, onCart, search, setSearch }) {
           <button className="icon-button desktop-only" aria-label="Wishlist">
             <Heart />
           </button>
-          <button
-            className="icon-button cart-button"
-            aria-label="Open cart"
-            onClick={onCart}
-          >
+          <button className="icon-button cart-button" aria-label="Open cart" onClick={onCart}>
             <ShoppingCart />
             <span className="cart-count">{cartCount}</span>
           </button>
@@ -141,20 +134,13 @@ function Header({ cartCount, onCart, search, setSearch }) {
 }
 
 function ProductCard({ product, onAdd, onWish, wished }) {
-  const tagClass =
-    product.tag === 'Best seller'
-      ? 'blue'
-      : product.tag === 'New'
-        ? 'green'
-        : '';
+  const tagClass = product.tag === 'Best seller' ? 'blue' : product.tag === 'New' ? 'green' : '';
 
   return (
     <article className="product-card">
       <div className="product-image">
         <img src={product.image} alt={product.name} loading="lazy" />
-        {product.tag && (
-          <span className={`product-tag ${tagClass}`}>{product.tag}</span>
-        )}
+        {product.tag && <span className={`product-tag ${tagClass}`}>{product.tag}</span>}
         <button
           className={`wish-button ${wished ? 'wished' : ''}`}
           onClick={() => onWish(product.id)}
@@ -190,30 +176,18 @@ function ProductCard({ product, onAdd, onWish, wished }) {
   );
 }
 
-function CartDrawer({
-  open,
-  onClose,
-  cart,
-  updateQty,
-  removeItem,
-  onCheckout,
-}) {
+function CartDrawer({ open, onClose, cart, updateQty, removeItem, onCheckout }) {
   if (!open) {
     return null;
   }
 
   const itemCount = cart.reduce((total, item) => total + item.qty, 0);
-  const subtotal = cart.reduce(
-    (total, item) => total + item.price * item.qty,
-    0,
-  );
+  const subtotal = cart.reduce((total, item) => total + item.price * item.qty, 0);
 
   return (
     <div
       className="overlay"
-      onMouseDown={(event) =>
-        event.target === event.currentTarget && onClose()
-      }
+      onMouseDown={(event) => event.target === event.currentTarget && onClose()}
     >
       <aside className="cart-drawer">
         <div className="drawer-head">
@@ -223,11 +197,7 @@ function CartDrawer({
               Shopping cart <span className="muted">({itemCount})</span>
             </h2>
           </div>
-          <button
-            className="icon-button"
-            onClick={onClose}
-            aria-label="Close cart"
-          >
+          <button className="icon-button" onClick={onClose} aria-label="Close cart">
             <X />
           </button>
         </div>
@@ -253,17 +223,11 @@ function CartDrawer({
                     <b>{item.name}</b>
                     <span>{formatPrice(item.price)}</span>
                     <div className="qty-control">
-                      <button
-                        onClick={() => updateQty(item.id, -1)}
-                        aria-label="Decrease quantity"
-                      >
+                      <button onClick={() => updateQty(item.id, -1)} aria-label="Decrease quantity">
                         <Minus size={13} />
                       </button>
                       <span>{item.qty}</span>
-                      <button
-                        onClick={() => updateQty(item.id, 1)}
-                        aria-label="Increase quantity"
-                      >
+                      <button onClick={() => updateQty(item.id, 1)} aria-label="Increase quantity">
                         <Plus size={13} />
                       </button>
                     </div>
@@ -285,10 +249,7 @@ function CartDrawer({
                 <strong>{formatPrice(subtotal)}</strong>
               </div>
               <p>Shipping and taxes calculated at checkout.</p>
-              <button
-                className="btn btn-dark full"
-                onClick={onCheckout}
-              >
+              <button className="btn btn-dark full" onClick={onCheckout}>
                 Continue to checkout <ArrowRight size={16} />
               </button>
               <button className="text-button full" onClick={onClose}>
@@ -315,8 +276,8 @@ function HeroSection() {
           Great <em>finds.</em>
         </h1>
         <p>
-          Discover pieces you'll love, from everyday essentials to little
-          luxuries. All in one place.
+          Discover pieces you'll love, from everyday essentials to little luxuries. All in one
+          place.
         </p>
         <div className="hero-actions">
           <a className="btn btn-dark" href="#products">
@@ -389,9 +350,7 @@ function CategorySection({ category, setCategory }) {
         {categories.map((item) => (
           <button
             key={item.name}
-            className={`category-item ${
-              category === item.name ? 'selected' : ''
-            }`}
+            className={`category-item ${category === item.name ? 'selected' : ''}`}
             onClick={() => setCategory(item.name)}
           >
             <span className="category-image">
@@ -415,11 +374,7 @@ function ProductsSection({
   setCategory,
   setSearch,
 }) {
-  const title = search
-    ? 'Search results'
-    : category === 'All'
-      ? 'Trending right now'
-      : category;
+  const title = search ? 'Search results' : category === 'All' ? 'Trending right now' : category;
   const description = search
     ? `Showing matches for “${search}”`
     : 'Customer favourites, handpicked for your everyday.';
@@ -433,9 +388,7 @@ function ProductsSection({
           <p>{description}</p>
         </div>
         <div className="section-side">
-          <span className="result-count">
-            {filteredProducts.length} products
-          </span>
+          <span className="result-count">{filteredProducts.length} products</span>
           <a
             href="#products"
             onClick={() => {
@@ -492,11 +445,7 @@ function PromoSection({ setCategory }) {
             <em>Big difference.</em>
           </h2>
           <p>Discover tech and accessories that make life flow.</p>
-          <a
-            className="btn btn-white"
-            href="#products"
-            onClick={() => setCategory('Electronics')}
-          >
+          <a className="btn btn-white" href="#products" onClick={() => setCategory('Electronics')}>
             Shop electronics <ArrowRight size={16} />
           </a>
         </div>
@@ -515,11 +464,7 @@ function PromoSection({ setCategory }) {
             <em>the lovely things.</em>
           </h2>
           <p>Comfortable pieces to make home feel like you.</p>
-          <a
-            className="btn btn-dark"
-            href="#products"
-            onClick={() => setCategory('Home & Living')}
-          >
+          <a className="btn btn-dark" href="#products" onClick={() => setCategory('Home & Living')}>
             Shop home <ArrowRight size={16} />
           </a>
         </div>
@@ -593,25 +538,16 @@ function Footer() {
         <a href="#why">About</a>
         <a href="mailto:hello@shopverse.example">Contact</a>
       </div>
-      <small>
-        © 2026 ShopVerse. Demo storefront for learning and development.
-      </small>
+      <small>© 2026 ShopVerse. Demo storefront for learning and development.</small>
     </footer>
   );
 }
 
-function CheckoutModal({
-  subtotal,
-  orderPlaced,
-  onClose,
-  onPlaceOrder,
-}) {
+function CheckoutModal({ subtotal, orderPlaced, onClose, onPlaceOrder }) {
   return (
     <div
       className="overlay"
-      onMouseDown={(event) =>
-        event.target === event.currentTarget && onClose()
-      }
+      onMouseDown={(event) => event.target === event.currentTarget && onClose()}
     >
       <div className="checkout-modal">
         <div className="drawer-head">
@@ -619,11 +555,7 @@ function CheckoutModal({
             <span className="eyebrow">DEMO CHECKOUT</span>
             <h2>{orderPlaced ? 'Order confirmed!' : 'Almost yours.'}</h2>
           </div>
-          <button
-            className="icon-button"
-            onClick={onClose}
-            aria-label="Close checkout"
-          >
+          <button className="icon-button" onClick={onClose} aria-label="Close checkout">
             <X />
           </button>
         </div>
@@ -648,21 +580,12 @@ function CheckoutModal({
 
             <label>
               Full name
-              <input
-                name="fullName"
-                required
-                placeholder="Your name"
-              />
+              <input name="fullName" required placeholder="Your name" />
             </label>
 
             <label>
               Email address
-              <input
-                name="email"
-                required
-                type="email"
-                placeholder="you@example.com"
-              />
+              <input name="email" required type="email" placeholder="you@example.com" />
             </label>
 
             <label>
@@ -676,8 +599,7 @@ function CheckoutModal({
             </label>
 
             <div className="demo-notice">
-              <ShieldCheck size={16} /> Demo checkout only. No real payment is
-              processed.
+              <ShieldCheck size={16} /> Demo checkout only. No real payment is processed.
             </div>
             <button className="btn btn-dark full" type="submit">
               Place demo order <ArrowRight size={16} />
@@ -703,17 +625,11 @@ function Storefront() {
   const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
 
-  const subtotal = cart.reduce(
-  (total, item) => total + item.price * (item.qty || 1),
-  0
-);
+  const subtotal = cart.reduce((total, item) => total + item.price * (item.qty || 1), 0);
 
-const cartCount = cart.reduce(
-  (total, item) => total + (item.qty || 1),
-  0
-);
+  const cartCount = cart.reduce((total, item) => total + (item.qty || 1), 0);
 
-useEffect(() => {
+  useEffect(() => {
     let active = true;
     apiRequest('/products')
       .then((data) => {
@@ -742,32 +658,26 @@ useEffect(() => {
     };
   }, []);
 
-
- const filteredProducts = useMemo(
-  () =>
-    products.filter(
-      (product) =>
-        (category === 'All' || product.category === category) &&
-        product.name.toLowerCase().includes(search.toLowerCase()),
-    ),
-  [products, category, search],
-);
-
+  const filteredProducts = useMemo(
+    () =>
+      products.filter(
+        (product) =>
+          (category === 'All' || product.category === category) &&
+          product.name.toLowerCase().includes(search.toLowerCase()),
+      ),
+    [products, category, search],
+  );
 
   function notify(message) {
     setToast(message);
     window.setTimeout(() => setToast(''), 2200);
   }
 
-
-
   function addToCart(product) {
     setCart((currentCart) =>
       currentCart.some((item) => item.id === product.id)
         ? currentCart.map((item) =>
-            item.id === product.id
-              ? { ...item, qty: item.qty + 1 }
-              : item,
+            item.id === product.id ? { ...item, qty: item.qty + 1 } : item,
           )
         : [...currentCart, { ...product, qty: 1 }],
     );
@@ -777,9 +687,7 @@ useEffect(() => {
   function updateQty(id, change) {
     setCart((currentCart) =>
       currentCart
-        .map((item) =>
-          item.id === id ? { ...item, qty: item.qty + change } : item,
-        )
+        .map((item) => (item.id === id ? { ...item, qty: item.qty + change } : item))
         .filter((item) => item.qty > 0),
     );
   }
@@ -792,32 +700,30 @@ useEffect(() => {
     }
   }
 
-
-async function placeOrder(event)
-{
+  async function placeOrder(event) {
     event.preventDefault();
 
     const form = event.currentTarget;
     const formData = new FormData(form);
 
-    const fullName = formData.get("fullName")?.trim();
-    const email = formData.get("email")?.trim();
-    const shippingAddress = formData.get("shippingAddress")?.trim();
+    const fullName = formData.get('fullName')?.trim();
+    const email = formData.get('email')?.trim();
+    const shippingAddress = formData.get('shippingAddress')?.trim();
 
     if (!token) {
       setCheckoutOpen(false);
-      window.location.href = "/login";
+      window.location.href = '/login';
       return;
     }
 
     if (!fullName || !email || !shippingAddress || cart.length === 0) {
-      notify("Please complete checkout details and add items.");
+      notify('Please complete checkout details and add items.');
       return;
     }
 
     try {
       await apiRequest('/orders', {
-        method: "POST",
+        method: 'POST',
         token,
         body: {
           items: cart.map((item) => ({
@@ -830,12 +736,11 @@ async function placeOrder(event)
 
       setOrderPlaced(true);
       setCart([]);
-      notify("Order saved successfully!");
+      notify('Order saved successfully!');
     } catch (error) {
-      notify(error.message || "Could not place order.");
+      notify(error.message || 'Could not place order.');
     }
   }
-
 
   function toggleWishlist(id) {
     setWishes((currentWishes) =>
@@ -856,20 +761,16 @@ async function placeOrder(event)
       <main>
         <HeroSection />
         <CategorySection category={category} setCategory={setCategory} />
-        {productsLoading ?
-        (
+        {productsLoading ? (
           <section className="products-section section-wrap">
             <h2>Loading products...</h2>
           </section>
-        ) :
-        productsError ?
-        (
+        ) : productsError ? (
           <section className="products-section section-wrap">
             <h2>Could not load products</h2>
             <p>{productsError}</p>
           </section>
-        ):
-        (
+        ) : (
           <ProductsSection
             category={category}
             filteredProducts={filteredProducts}
@@ -891,11 +792,7 @@ async function placeOrder(event)
         onClose={() => setCartOpen(false)}
         cart={cart}
         updateQty={updateQty}
-        removeItem={(id) =>
-          setCart((currentCart) =>
-            currentCart.filter((item) => item.id !== id),
-          )
-        }
+        removeItem={(id) => setCart((currentCart) => currentCart.filter((item) => item.id !== id))}
         onCheckout={checkout}
       />
 
@@ -919,8 +816,6 @@ async function placeOrder(event)
     </div>
   );
 }
-
-
 
 export default function App() {
   return (

@@ -1,11 +1,6 @@
-
 import express from "express";
 import { protect } from "../middleware/authMiddleware.js";
-import {
-  createOrder,
-  getMyOrders,
-  getOrderById,
-} from "../Controllers/orderController.js";
+import { createOrder, getMyOrders, getOrderById } from "../Controllers/orderController.js";
 
 const router = express.Router();
 

@@ -1,4 +1,3 @@
-
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 
@@ -18,18 +17,14 @@ async function seedProducts() {
     const dataPath = path.resolve("../src/data.js");
     const content = fs.readFileSync(dataPath, "utf8");
 
-    const productSection = content.match(
-      /export const products\s*=\s*(\[[\s\S]*?\]);/
-    );
+    const productSection = content.match(/export const products\s*=\s*(\[[\s\S]*?\]);/);
 
     if (!productSection) {
       throw new Error("Could not find products in src/data.js");
     }
 
     // data.js is a local project file containing the demo array.
-    const demoProducts = Function(
-      `"use strict"; return (${productSection[1]});`
-    )();
+    const demoProducts = Function(`"use strict"; return (${productSection[1]});`)();
 
     let added = 0;
     let skipped = 0;

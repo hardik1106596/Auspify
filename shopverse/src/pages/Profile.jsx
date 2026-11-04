@@ -71,8 +71,12 @@ export default function Profile() {
       description="Keep your details up to date for a smoother shopping experience."
     >
       <div className="account-nav">
-        <Link className="account-nav-active" to="/profile"><UserRound size={16} /> Profile</Link>
-        <Link to="/orders"><span>▤</span> Orders <ArrowRight size={15} /></Link>
+        <Link className="account-nav-active" to="/profile">
+          <UserRound size={16} /> Profile
+        </Link>
+        <Link to="/orders">
+          <span>▤</span> Orders <ArrowRight size={15} />
+        </Link>
       </div>
       <section className="account-panel">
         <div className="panel-heading">
@@ -86,7 +90,9 @@ export default function Profile() {
         </div>
 
         {loading ? (
-          <div className="account-inline-loading"><span className="account-spinner" /> Loading profile...</div>
+          <div className="account-inline-loading">
+            <span className="account-spinner" /> Loading profile...
+          </div>
         ) : (
           <form className="account-form profile-form" onSubmit={handleSubmit}>
             <label>
@@ -134,8 +140,16 @@ export default function Profile() {
                 />
               </span>
             </label>
-            {error && <p className="form-message form-error" role="alert">{error}</p>}
-            {message && <p className="form-message form-success" role="status">{message}</p>}
+            {error && (
+              <p className="form-message form-error" role="alert">
+                {error}
+              </p>
+            )}
+            {message && (
+              <p className="form-message form-success" role="status">
+                {message}
+              </p>
+            )}
             <button className="btn btn-dark" type="submit" disabled={saving}>
               {saving ? 'Saving changes...' : 'Save changes'} <ArrowRight size={16} />
             </button>

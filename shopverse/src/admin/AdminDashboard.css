@@ -1,4 +1,3 @@
-
 .admin-shell {
   min-height: 100vh;
   display: flex;
@@ -218,7 +217,9 @@
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
-  transition: background 0.18s, border-color 0.18s;
+  transition:
+    background 0.18s,
+    border-color 0.18s;
 }
 
 .admin-primary-button {
@@ -485,7 +486,7 @@
   font-weight: 650;
 }
 
-.admin-form input:not([type="checkbox"]),
+.admin-form input:not([type='checkbox']),
 .admin-form textarea,
 .admin-form select {
   box-sizing: border-box;

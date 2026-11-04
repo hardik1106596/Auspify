@@ -1,4 +1,3 @@
-
 import express from "express";
 import Product from "../models/Product.js";
 
@@ -32,8 +31,7 @@ router.get("/:id", async (req, res) => {
 // POST: Add a product
 router.post("/", async (req, res) => {
   try {
-    const { name, description, price, category, image, stock, featured } =
-      req.body;
+    const { name, description, price, category, image, stock, featured } = req.body;
 
     if (
       !name?.trim() ||
@@ -69,11 +67,10 @@ router.post("/", async (req, res) => {
 // PUT: Update a product
 router.put("/:id", async (req, res) => {
   try {
-    const product = await Product.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    );
+    const product = await Product.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+      runValidators: true,
+    });
 
     if (!product) {
       return res.status(404).json({ message: "Product not found" });

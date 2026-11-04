@@ -34,8 +34,12 @@ export default function Register() {
     <main className="auth-page">
       <section className="auth-card">
         <div className="auth-brand">
-          <span className="brand-mark"><UserRound size={22} /></span>
-          <span>Shop<span>Verse</span></span>
+          <span className="brand-mark">
+            <UserRound size={22} />
+          </span>
+          <span>
+            Shop<span>Verse</span>
+          </span>
         </div>
         <span className="eyebrow">JOIN THE VERSE</span>
         <h1>Your next great find starts here.</h1>
@@ -84,7 +88,11 @@ export default function Register() {
               />
             </span>
           </label>
-          {error && <p className="form-message form-error" role="alert">{error}</p>}
+          {error && (
+            <p className="form-message form-error" role="alert">
+              {error}
+            </p>
+          )}
           <button className="btn btn-dark full" type="submit" disabled={submitting}>
             {submitting ? 'Creating account...' : 'Create account'} <ArrowRight size={16} />
           </button>

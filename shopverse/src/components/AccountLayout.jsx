@@ -6,8 +6,12 @@ export default function AccountLayout({ children, eyebrow, title, description })
     <main className="account-page">
       <header className="account-topbar">
         <Link className="brand" to="/">
-          <span className="brand-mark"><ShoppingBag size={22} /></span>
-          <span>Shop<span>Verse</span></span>
+          <span className="brand-mark">
+            <ShoppingBag size={22} />
+          </span>
+          <span>
+            Shop<span>Verse</span>
+          </span>
         </Link>
         <Link className="account-back-link" to="/">
           <ArrowLeft size={15} /> Back to shop
