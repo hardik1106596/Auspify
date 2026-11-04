@@ -1,10 +1,34 @@
-import { Router } from 'express';
-import { enroll, listMyEnrollments } from '../controllers/enrollmentController.js';
-import { protect } from '../middleware/authMiddleware.js';
-import { requireRole } from '../middleware/roleMiddleware.js';
+const express = require("express");
+const protect = require("../middleware/authMiddleware");
+const authorize = require("../middleware/roleMiddleware");
 
-const router = Router();
-router.use(protect);
-router.post('/:courseId', requireRole('learner'), enroll);
-router.get('/mine', requireRole('learner'), listMyEnrollments);
-export default router;
+const {
+  enrollCourse,
+  myEnrollments,
+  courseStudents,
+} = require("../controllers/enrollmentController");
+
+const router = express.Router();
+
+router.post(
+  "/:courseId",
+  protect,
+  authorize("student"),
+  enrollCourse
+);
+
+router.get(
+  "/my",
+  protect,
+  authorize("student"),
+  myEnrollments
+);
+
+router.get(
+  "/course/:courseId/students",
+  protect,
+  authorize("instructor", "admin"),
+  courseStudents
+);
+
+module.exports = router;

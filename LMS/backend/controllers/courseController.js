@@ -1,40 +1,120 @@
-import mongoose from 'mongoose';
-import Course from '../models/Course.js';
+const Course = require("../models/Course");
+const Enrollment = require("../models/Enrollment");
 
-export async function listCourses(req, res) {
-  const filter = { published: true };
-  if (typeof req.query.category === 'string' && req.query.category.trim()) filter.category = req.query.category.trim();
-  const courses = await Course.find(filter).populate('instructor', 'name').sort({ createdAt: -1 });
-  res.json({ courses });
-}
+exports.getCourses = async (req, res) => {
+  try {
+    const courses = await Course.find({ published: true })
+      .populate("instructor", "name");
 
-export async function getCourse(req, res) {
-  if (!mongoose.isValidObjectId(req.params.id)) return res.status(404).json({ message: 'Course not found.' });
-  const course = await Course.findOne({ _id: req.params.id, published: true }).populate('instructor', 'name');
-  if (!course) return res.status(404).json({ message: 'Course not found.' });
-  res.json({ course });
-}
-
-export async function listMyCourses(req, res) {
-  const filter = req.user.role === 'admin' ? {} : { instructor: req.user.id };
-  const courses = await Course.find(filter).populate('instructor', 'name').sort({ createdAt: -1 });
-  res.json({ courses });
-}
-
-export async function createCourse(req, res) {
-  const course = await Course.create({ ...req.body, instructor: req.user.id });
-  res.status(201).json({ course });
-}
-
-export async function updateCourse(req, res) {
-  if (!mongoose.isValidObjectId(req.params.id)) return res.status(404).json({ message: 'Course not found.' });
-  const course = await Course.findById(req.params.id);
-  if (!course) return res.status(404).json({ message: 'Course not found.' });
-  if (req.user.role !== 'admin' && course.instructor.toString() !== req.user.id) {
-    return res.status(403).json({ message: 'You can only manage your own courses.' });
+    res.json(courses);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
-  const allowed = ['title', 'description', 'category', 'level', 'lessons', 'learningOutcomes', 'published'];
-  for (const key of allowed) if (req.body[key] !== undefined) course.set(key, req.body[key]);
-  await course.save();
-  res.json({ course });
-}
+};
+
+exports.getCourse = async (req, res) => {
+  try {
+    const course = await Course.findById(req.params.id)
+      .populate("instructor", "name");
+
+    if (!course) {
+      return res.status(404).json({
+        message: "Course not found.",
+      });
+    }
+
+    if (!course.published && req.user?.role !== "admin") {
+      return res.status(404).json({
+        message: "Course not found.",
+      });
+    }
+
+    res.json(course);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.createCourse = async (req, res) => {
+  try {
+    const course = await Course.create({
+      ...req.body,
+      instructor: req.user._id,
+    });
+
+    res.status(201).json(course);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+exports.updateCourse = async (req, res) => {
+  try {
+    const course = await Course.findById(req.params.id);
+
+    if (!course) {
+      return res.status(404).json({
+        message: "Course not found.",
+      });
+    }
+
+    if (
+      req.user.role !== "admin" &&
+      course.instructor.toString() !== req.user._id.toString()
+    ) {
+      return res.status(403).json({
+        message: "You cannot modify this course.",
+      });
+    }
+
+    const allowedFields = [
+      "title",
+      "description",
+      "category",
+      "thumbnail",
+      "lessons",
+      "price",
+      "level",
+      "published",
+    ];
+
+    allowedFields.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        course[field] = req.body[field];
+      }
+    });
+
+    await course.save();
+    res.json(course);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+};
+
+exports.deleteCourse = async (req, res) => {
+  try {
+    const course = await Course.findById(req.params.id);
+
+    if (!course) {
+      return res.status(404).json({
+        message: "Course not found.",
+      });
+    }
+
+    if (
+      req.user.role !== "admin" &&
+      course.instructor.toString() !== req.user._id.toString()
+    ) {
+      return res.status(403).json({
+        message: "You cannot delete this course.",
+      });
+    }
+
+    await Enrollment.deleteMany({ course: course._id });
+    await course.deleteOne();
+
+    res.json({ message: "Course deleted successfully." });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

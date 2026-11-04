@@ -1,102 +1,72 @@
-import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { api } from '../services/api.js';
-import { useAuth } from '../context/AuthContext.jsx';
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import MainLayout from "../layouts/MainLayout";
+import api from "../services/api";
+import { useAuth } from "../context/AuthContext";
 
 export default function CourseDetails() {
   const { id } = useParams();
   const { user } = useAuth();
+
   const [course, setCourse] = useState(null);
-  const [completedLessons, setCompletedLessons] = useState([]);
-  const [enrolled, setEnrolled] = useState(false);
-  const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
-  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
-    let active = true;
-    api(`/courses/${id}`)
-      .then(({ course: result }) => { if (active) setCourse(result); })
-      .catch((requestError) => { if (active) setError(requestError.message); });
-    return () => { active = false; };
+    api.get(`/courses/${id}`)
+      .then((res) => setCourse(res.data))
+      .catch(() => setMessage("Course not found."));
   }, [id]);
 
-  useEffect(() => {
-    if (!course || user?.role !== 'learner') return;
-    let active = true;
-    api(`/progress/${id}`)
-      .then(({ progress }) => {
-        if (active) {
-          setEnrolled(true);
-          setCompletedLessons(progress.completedLessons.map((lesson) => String(lesson)));
-        }
-      })
-      .catch(() => {
-        if (active) setEnrolled(false);
-      });
-    return () => { active = false; };
-  }, [course, id, user]);
-
-  async function enroll() {
-    setBusy(true);
-    setMessage('');
+  const enroll = async () => {
     try {
-      await api(`/enrollments/${id}`, { method: 'POST' });
-      setEnrolled(true);
-      setMessage('You are enrolled. Find this course in My learning.');
-    } catch (requestError) {
-      setMessage(requestError.message);
-    } finally {
-      setBusy(false);
+      await api.post(`/enrollments/${id}`);
+      setMessage("Successfully enrolled!");
+    } catch (error) {
+      setMessage(error.response?.data?.message || "Enrollment failed.");
     }
-  }
+  };
 
-  async function completeLesson(lessonId) {
-    setBusy(true);
-    setMessage('');
-    try {
-      const { progress } = await api(`/progress/${id}`, {
-        method: 'PUT',
-        body: { lessonId },
-      });
-      setCompletedLessons(progress.completedLessons.map((lesson) => String(lesson)));
-    } catch (requestError) {
-      setMessage(requestError.message);
-    } finally {
-      setBusy(false);
-    }
+  if (!course) {
+    return <MainLayout><div className="p-10">{message || "Loading..."}</div></MainLayout>;
   }
-
-  if (error) return <p className="error" role="alert">{error} <Link to="/courses">Browse courses</Link></p>;
-  if (!course) return <p className="notice">Loading course...</p>;
-  const canEnroll = user?.role === 'learner';
 
   return (
-    <article className="detail-card">
-      <p className="eyebrow">{course.category} · {course.level}</p>
-      <h1>{course.title}</h1>
-      <p className="lead">{course.description}</p>
-      <p>Instructor: {course.instructor?.name || 'Auspify instructor'}</p>
-      <section className="section">
-        <h2>What you will learn</h2>
-        {course.learningOutcomes?.length ? <ul>{course.learningOutcomes.map((item) => <li key={item}>{item}</li>)}</ul> : <p>Course outcomes will be added soon.</p>}
-      </section>
-      <section className="section">
-        <h2>Lessons</h2>
-        {course.lessons?.length ? <ol>{course.lessons.map((lesson) => (
-          <li key={lesson._id || lesson.title}>
-            <strong>{lesson.title}</strong>
-            {lesson.description && <p>{lesson.description}</p>}
-            {enrolled && <button className="text-button" disabled={busy || completedLessons.includes(String(lesson._id))} onClick={() => completeLesson(lesson._id)}>
-              {completedLessons.includes(String(lesson._id)) ? 'Completed' : 'Mark complete'}
-            </button>}
-          </li>
-        ))}</ol> : <p>Lessons will be added soon.</p>}
-      </section>
-      {canEnroll && !enrolled && <button className="button" onClick={enroll} disabled={busy}>{busy ? 'Enrolling...' : 'Enroll in this course'}</button>}
-      {enrolled && <p className="notice" role="status">{completedLessons.length} of {course.lessons.length} lessons completed.</p>}
-      {!user && <p><Link to="/login">Sign in</Link> as a learner to enroll.</p>}
-      {message && <p className="notice" role="status">{message}</p>}
-    </article>
+    <MainLayout>
+      <div className="max-w-5xl mx-auto p-8">
+        <img
+          src={course.thumbnail || "https://placehold.co/1200x400"}
+          alt={course.title}
+          className="w-full h-72 object-cover rounded-2xl"
+        />
+
+        <h1 className="text-4xl font-bold mt-8">{course.title}</h1>
+        <p className="text-gray-500 mt-3">
+          Instructor: {course.instructor?.name}
+        </p>
+
+        <p className="mt-6">{course.description}</p>
+
+        <button
+          onClick={enroll}
+          disabled={!user || user.role !== "student"}
+          className="bg-indigo-600 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg mt-8"
+        >
+          Enroll Now
+        </button>
+
+        {message && <p className="mt-4">{message}</p>}
+
+        <h2 className="text-2xl font-bold mt-12">Course Lessons</h2>
+
+        <div className="mt-5 space-y-3">
+          {course.lessons.map((lesson, index) => (
+            <div key={lesson._id} className="border p-4 rounded-lg">
+              {index + 1}. {lesson.title}
+              <p className="text-gray-500">{lesson.duration}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </MainLayout>
   );
 }

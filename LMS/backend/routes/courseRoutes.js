@@ -1,12 +1,39 @@
-import { Router } from 'express';
-import { createCourse, getCourse, listCourses, listMyCourses, updateCourse } from '../controllers/courseController.js';
-import { protect } from '../middleware/authMiddleware.js';
-import { requireRole } from '../middleware/roleMiddleware.js';
+const express = require("express");
+const protect = require("../middleware/authMiddleware");
+const authorize = require("../middleware/roleMiddleware");
 
-const router = Router();
-router.get('/', listCourses);
-router.get('/mine', protect, requireRole('instructor', 'admin'), listMyCourses);
-router.get('/:id', getCourse);
-router.post('/', protect, requireRole('instructor', 'admin'), createCourse);
-router.put('/:id', protect, requireRole('instructor', 'admin'), updateCourse);
-export default router;
+const {
+  getCourses,
+  getCourse,
+  createCourse,
+  updateCourse,
+  deleteCourse,
+} = require("../controllers/courseController");
+
+const router = express.Router();
+
+router.get("/", getCourses);
+router.get("/:id", getCourse);
+
+router.post(
+  "/",
+  protect,
+  authorize("instructor", "admin"),
+  createCourse
+);
+
+router.put(
+  "/:id",
+  protect,
+  authorize("instructor", "admin"),
+  updateCourse
+);
+
+router.delete(
+  "/:id",
+  protect,
+  authorize("instructor", "admin"),
+  deleteCourse
+);
+
+module.exports = router;

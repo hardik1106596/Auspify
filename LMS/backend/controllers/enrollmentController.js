@@ -1,30 +1,76 @@
-import mongoose from 'mongoose';
-import Course from '../models/Course.js';
-import Enrollment from '../models/Enrollment.js';
-import Progress from '../models/Progress.js';
+const Enrollment = require("../models/Enrollment");
+const Course = require("../models/Course");
 
-export async function enroll(req, res) {
-  if (!mongoose.isValidObjectId(req.params.courseId)) return res.status(404).json({ message: 'Course not found.' });
-  const course = await Course.findOne({ _id: req.params.courseId, published: true });
-  if (!course) return res.status(404).json({ message: 'Course not found.' });
+exports.enrollCourse = async (req, res) => {
   try {
-    const enrollment = await Enrollment.create({ learner: req.user.id, course: course.id });
-    return res.status(201).json({ enrollment });
-  } catch (error) {
-    if (error.code === 11000) return res.status(409).json({ message: 'You are already enrolled in this course.' });
-    throw error;
-  }
-}
+    const course = await Course.findById(req.params.courseId);
 
-export async function listMyEnrollments(req, res) {
-  const enrollments = await Enrollment.find({ learner: req.user.id })
-    .populate('course')
-    .sort({ enrolledAt: -1 })
-    .lean();
-  const progressRows = await Progress.find({ learner: req.user.id }).lean();
-  const progressByCourse = new Map(progressRows.map((progress) => [progress.course.toString(), progress]));
-  for (const enrollment of enrollments) {
-    enrollment.progress = progressByCourse.get(enrollment.course?._id.toString()) || { completedLessons: [] };
+    if (!course || !course.published) {
+      return res.status(404).json({
+        message: "Course not found.",
+      });
+    }
+
+    const enrollment = await Enrollment.create({
+      student: req.user._id,
+      course: course._id,
+    });
+
+    res.status(201).json({
+      message: "Enrollment successful.",
+      enrollment,
+    });
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(409).json({
+        message: "Already enrolled in this course.",
+      });
+    }
+
+    res.status(500).json({ message: error.message });
   }
-  res.json({ enrollments });
-}
+};
+
+exports.myEnrollments = async (req, res) => {
+  try {
+    const enrollments = await Enrollment.find({
+      student: req.user._id,
+    }).populate({
+      path: "course",
+      populate: { path: "instructor", select: "name" },
+    });
+
+    res.json(enrollments);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.courseStudents = async (req, res) => {
+  try {
+    const course = await Course.findById(req.params.courseId);
+
+    if (!course) {
+      return res.status(404).json({
+        message: "Course not found.",
+      });
+    }
+
+    if (
+      req.user.role !== "admin" &&
+      course.instructor.toString() !== req.user._id.toString()
+    ) {
+      return res.status(403).json({
+        message: "Access denied.",
+      });
+    }
+
+    const students = await Enrollment.find({
+      course: course._id,
+    }).populate("student", "name email");
+
+    res.json(students);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

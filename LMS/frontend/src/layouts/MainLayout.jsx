@@ -1,12 +1,10 @@
-import { Outlet } from 'react-router-dom';
-import Navbar from '../components/Navbar.jsx';
+import Navbar from "../components/Navbar";
 
-export default function MainLayout() {
+export default function MainLayout({ children }) {
   return (
     <>
       <Navbar />
-      <main className="container main-content"><Outlet /></main>
-      <footer className="footer">Auspify Learn · Build skills at your own pace.</footer>
+      <main>{children}</main>
     </>
   );
 }

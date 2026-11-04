@@ -1,15 +1,32 @@
-import { useCourses } from './Courses.jsx';
+import { useEffect, useState } from "react";
+import DashboardLayout from "../layouts/DashboardLayout";
+import api from "../services/api";
 
 export default function AdminDashboard() {
-  const { courses, loading, error } = useCourses();
+  const [courses, setCourses] = useState([]);
+  const [users, setUsers] = useState([]);
+
+  useEffect(() => {
+    api.get("/courses").then((res) => setCourses(res.data));
+    api.get("/users").then((res) => setUsers(res.data));
+  }, []);
+
   return (
-    <section className="section">
-      <p className="eyebrow">ADMIN DASHBOARD</p><h1>Platform overview</h1>
-      {error && <p className="error" role="alert">{error}</p>}
-      {loading ? <p className="notice">Loading platform data...</p> : (
-        <div className="stats-grid"><article className="stat-card"><strong>{courses.length}</strong><span>Published courses</span></article></div>
-      )}
-      <p>Manage trusted administrator accounts directly in the database.</p>
-    </section>
+    <DashboardLayout>
+      <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+
+      <div className="grid md:grid-cols-3 gap-6 mt-8">
+        {[
+          ["Total Courses", courses.length],
+          ["Total Users", users.length],
+          ["Platform Status", "Active"],
+        ].map(([title, value]) => (
+          <div key={title} className="bg-white border rounded-xl p-6">
+            <p className="text-gray-500">{title}</p>
+            <h2 className="text-3xl font-bold mt-3">{value}</h2>
+          </div>
+        ))}
+      </div>
+    </DashboardLayout>
   );
 }

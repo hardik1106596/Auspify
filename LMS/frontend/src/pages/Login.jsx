@@ -1,37 +1,72 @@
-import { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext.jsx';
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import MainLayout from "../layouts/MainLayout";
+import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
-  const [form, setForm] = useState({ email: '', password: '' });
-  const [error, setError] = useState('');
-  const [busy, setBusy] = useState(false);
 
-  async function submit(event) {
-    event.preventDefault();
-    setBusy(true);
-    setError('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+
     try {
-      await login(form);
-      navigate(location.state?.from?.pathname || '/dashboard', { replace: true });
-    } catch (requestError) {
-      setError(requestError.message);
-    } finally {
-      setBusy(false);
+      const user = await login(email, password);
+
+      if (user.role === "admin") navigate("/admin");
+      else if (user.role === "instructor") navigate("/instructor");
+      else navigate("/dashboard");
+    } catch (err) {
+      setError(err.response?.data?.message || "Login failed.");
     }
-  }
+  };
 
   return (
-    <form className="form-card" onSubmit={submit}>
-      <p className="eyebrow">WELCOME BACK</p><h1>Sign in</h1>
-      <label>Email<input type="email" autoComplete="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></label>
-      <label>Password<input type="password" autoComplete="current-password" required value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></label>
-      {error && <p className="error" role="alert">{error}</p>}
-      <button className="button" disabled={busy}>{busy ? 'Signing in...' : 'Sign in'}</button>
-      <p>New to Auspify Learn? <Link to="/register">Create an account</Link></p>
-    </form>
+    <MainLayout>
+      <div className="min-h-[80vh] flex justify-center items-center p-6">
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white border rounded-2xl p-8 w-full max-w-md shadow-lg"
+        >
+          <h1 className="text-3xl font-bold text-center">Welcome Back</h1>
+          <p className="text-gray-500 text-center mt-2">
+            Login to continue learning
+          </p>
+
+          {error && <p className="text-red-500 mt-4">{error}</p>}
+
+          <label className="block mt-6">Email</label>
+          <input
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full border rounded-lg p-3 mt-2"
+          />
+
+          <label className="block mt-4">Password</label>
+          <input
+            type="password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full border rounded-lg p-3 mt-2"
+          />
+
+          <button className="w-full bg-indigo-600 text-white p-3 rounded-lg mt-6">
+            Login
+          </button>
+
+          <p className="text-center mt-5">
+            Don't have an account? <Link to="/register" className="text-indigo-600">Register</Link>
+          </p>
+        </form>
+      </div>
+    </MainLayout>
   );
 }

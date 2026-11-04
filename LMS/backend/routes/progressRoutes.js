@@ -1,9 +1,26 @@
-import { Router } from 'express';
-import { getProgress, updateProgress } from '../controllers/progressController.js';
-import { protect } from '../middleware/authMiddleware.js';
+const express = require("express");
+const protect = require("../middleware/authMiddleware");
+const authorize = require("../middleware/roleMiddleware");
 
-const router = Router();
-router.use(protect);
-router.get('/:courseId', getProgress);
-router.put('/:courseId', updateProgress);
-export default router;
+const {
+  getMyProgress,
+  completeLesson,
+} = require("../controllers/progressController");
+
+const router = express.Router();
+
+router.get(
+  "/my",
+  protect,
+  authorize("student"),
+  getMyProgress
+);
+
+router.post(
+  "/:courseId/lessons/:lessonId/complete",
+  protect,
+  authorize("student"),
+  completeLesson
+);
+
+module.exports = router;

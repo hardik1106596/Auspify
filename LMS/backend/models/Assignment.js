@@ -1,17 +1,25 @@
-import mongoose from 'mongoose';
+const mongoose = require("mongoose");
 
-const submissionSchema = new mongoose.Schema({
-  learner: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  text: { type: String, required: true, trim: true, maxlength: 5000 },
-  submittedAt: { type: Date, default: Date.now },
-}, { _id: true });
+const assignmentSchema = new mongoose.Schema(
+  {
+    title: { type: String, required: true },
 
-const assignmentSchema = new mongoose.Schema({
-  course: { type: mongoose.Schema.Types.ObjectId, ref: 'Course', required: true, index: true },
-  title: { type: String, required: true, trim: true, maxlength: 160 },
-  instructions: { type: String, required: true, trim: true, maxlength: 3000 },
-  dueAt: { type: Date },
-  submissions: { type: [submissionSchema], default: [] },
-}, { timestamps: true });
+    description: { type: String, required: true },
 
-export default mongoose.model('Assignment', assignmentSchema);
+    course: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Course",
+      required: true,
+    },
+
+    dueDate: Date,
+
+    totalMarks: {
+      type: Number,
+      default: 100,
+    },
+  },
+  { timestamps: true }
+);
+
+module.exports = mongoose.model("Assignment", assignmentSchema);

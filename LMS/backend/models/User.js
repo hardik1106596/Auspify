@@ -1,23 +1,40 @@
-import bcrypt from 'bcryptjs';
-import mongoose from 'mongoose';
+const mongoose = require("mongoose");
 
-const userSchema = new mongoose.Schema({
-  name: { type: String, required: true, trim: true, maxlength: 80 },
-  email: { type: String, required: true, unique: true, lowercase: true, trim: true, maxlength: 254 },
-  password: { type: String, required: true, minlength: 8, select: false },
-  role: { type: String, enum: ['learner', 'instructor', 'admin'], default: 'learner' },
-}, { timestamps: true });
+const userSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
 
-userSchema.pre('save', async function hashPassword() {
-  if (this.isModified('password')) this.password = await bcrypt.hash(this.password, 12);
-});
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
 
-userSchema.methods.comparePassword = function comparePassword(password) {
-  return bcrypt.compare(password, this.password);
-};
+    password: {
+      type: String,
+      required: true,
+      minlength: 6,
+      select: false,
+    },
 
-userSchema.methods.toPublic = function toPublic() {
-  return { id: this.id, name: this.name, email: this.email, role: this.role };
-};
+    role: {
+      type: String,
+      enum: ["student", "instructor", "admin"],
+      default: "student",
+    },
 
-export default mongoose.model('User', userSchema);
+    profileImage: {
+      type: String,
+      default: "",
+    },
+  },
+  { timestamps: true }
+);
+
+module.exports = mongoose.model("User", userSchema);

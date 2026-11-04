@@ -1,20 +1,58 @@
-import mongoose from 'mongoose';
+const mongoose = require("mongoose");
 
 const lessonSchema = new mongoose.Schema({
-  title: { type: String, required: true, trim: true, maxlength: 160 },
-  description: { type: String, trim: true, maxlength: 1000, default: '' },
-  videoUrl: { type: String, trim: true, default: '' },
-}, { timestamps: true });
+  title: { type: String, required: true },
+  description: String,
+  videoUrl: String,
+  resourceUrl: String,
+  duration: String,
+});
 
-const courseSchema = new mongoose.Schema({
-  instructor: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
-  title: { type: String, required: true, trim: true, maxlength: 120 },
-  description: { type: String, required: true, trim: true, maxlength: 3000 },
-  category: { type: String, required: true, trim: true, maxlength: 80 },
-  level: { type: String, enum: ['Beginner', 'Intermediate', 'Advanced'], default: 'Beginner' },
-  lessons: { type: [lessonSchema], default: [] },
-  learningOutcomes: { type: [String], default: [] },
-  published: { type: Boolean, default: true },
-}, { timestamps: true });
+const courseSchema = new mongoose.Schema(
+  {
+    title: {
+      type: String,
+      required: true,
+      trim: true,
+    },
 
-export default mongoose.model('Course', courseSchema);
+    description: {
+      type: String,
+      required: true,
+    },
+
+    category: {
+      type: String,
+      default: "General",
+    },
+
+    thumbnail: String,
+
+    instructor: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
+    lessons: [lessonSchema],
+
+    price: {
+      type: Number,
+      default: 0,
+    },
+
+    level: {
+      type: String,
+      enum: ["Beginner", "Intermediate", "Advanced"],
+      default: "Beginner",
+    },
+
+    published: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  { timestamps: true }
+);
+
+module.exports = mongoose.model("Course", courseSchema);

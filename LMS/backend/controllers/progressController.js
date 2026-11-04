@@ -1,45 +1,94 @@
-import mongoose from 'mongoose';
-import Course from '../models/Course.js';
-import Enrollment from '../models/Enrollment.js';
-import Progress from '../models/Progress.js';
+const Progress = require("../models/Progress");
+const Enrollment = require("../models/Enrollment");
+const Course = require("../models/Course");
 
-async function getEnrolledCourse(req, res) {
-  if (!mongoose.isValidObjectId(req.params.courseId)) {
-    res.status(404).json({ message: 'Course not found.' });
-    return null;
-  }
-  const course = await Course.findById(req.params.courseId);
-  if (!course) {
-    res.status(404).json({ message: 'Course not found.' });
-    return null;
-  }
-  const allowed = req.user.role === 'admin' || course.instructor.toString() === req.user.id ||
-    await Enrollment.exists({ learner: req.user.id, course: course.id });
-  if (!allowed) {
-    res.status(403).json({ message: 'Enroll in this course to access learning progress.' });
-    return null;
-  }
-  return course;
-}
+exports.getMyProgress = async (req, res) => {
+  try {
+    const progress = await Progress.find({
+      student: req.user._id,
+    }).populate("course", "title thumbnail");
 
-export async function getProgress(req, res) {
-  const course = await getEnrolledCourse(req, res);
-  if (!course) return;
-  const progress = await Progress.findOne({ learner: req.user.id, course: course.id });
-  res.json({ progress: progress || { completedLessons: [] } });
-}
-
-export async function updateProgress(req, res) {
-  const course = await getEnrolledCourse(req, res);
-  if (!course) return;
-  const lessonId = req.body.lessonId;
-  if (!mongoose.isValidObjectId(lessonId) || !course.lessons.id(lessonId)) {
-    return res.status(400).json({ message: 'Choose a valid lesson in this course.' });
+    res.json(progress);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
   }
-  const progress = await Progress.findOneAndUpdate(
-    { learner: req.user.id, course: course.id },
-    { $addToSet: { completedLessons: lessonId } },
-    { new: true, upsert: true, runValidators: true },
-  );
-  res.json({ progress });
-}
+};
+
+exports.completeLesson = async (req, res) => {
+  try {
+    const { courseId, lessonId } = req.params;
+
+    const enrollment = await Enrollment.findOne({
+      student: req.user._id,
+      course: courseId,
+    });
+
+    if (!enrollment) {
+      return res.status(403).json({
+        message: "Enroll in the course first.",
+      });
+    }
+
+    const course = await Course.findById(courseId);
+
+    if (!course) {
+      return res.status(404).json({
+        message: "Course not found.",
+      });
+    }
+
+    const lessonExists = course.lessons.some(
+      (lesson) => lesson._id.toString() === lessonId
+    );
+
+    if (!lessonExists) {
+      return res.status(404).json({
+        message: "Lesson not found.",
+      });
+    }
+
+    let progress = await Progress.findOne({
+      student: req.user._id,
+      course: courseId,
+    });
+
+    if (!progress) {
+      progress = await Progress.create({
+        student: req.user._id,
+        course: courseId,
+        completedLessons: [],
+      });
+    }
+
+    const alreadyCompleted = progress.completedLessons.some(
+      (id) => id.toString() === lessonId
+    );
+
+    if (!alreadyCompleted) {
+      progress.completedLessons.push(lessonId);
+    }
+
+    const totalLessons = course.lessons.length;
+
+    progress.percentage =
+      totalLessons === 0
+        ? 0
+        : Math.round(
+            (progress.completedLessons.length / totalLessons) * 100
+          );
+
+    await progress.save();
+
+    if (progress.percentage === 100) {
+      enrollment.completed = true;
+      await enrollment.save();
+    }
+
+    res.json({
+      message: "Lesson completed.",
+      progress,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

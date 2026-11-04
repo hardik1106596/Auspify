@@ -1,8 +1,21 @@
-import { Outlet } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext.jsx';
-import Sidebar from '../components/Sidebar.jsx';
+import Sidebar from "../components/Sidebar";
+import Navbar from "../components/Navbar";
+import { useAuth } from "../context/AuthContext";
 
-export default function DashboardLayout() {
+export default function DashboardLayout({ children }) {
   const { user } = useAuth();
-  return <div className="container dashboard-layout"><Sidebar role={user.role} /><section className="dashboard-content"><Outlet /></section></div>;
+
+  return (
+    <div>
+      <Navbar />
+
+      <div className="flex">
+        <Sidebar role={user?.role} />
+
+        <main className="flex-1 min-w-0 p-8 bg-slate-50 min-h-screen">
+          {children}
+        </main>
+      </div>
+    </div>
+  );
 }

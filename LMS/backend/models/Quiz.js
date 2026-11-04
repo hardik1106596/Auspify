@@ -1,15 +1,50 @@
-import mongoose from 'mongoose';
+const mongoose = require("mongoose");
 
 const questionSchema = new mongoose.Schema({
-  prompt: { type: String, required: true, trim: true, maxlength: 500 },
-  options: { type: [{ type: String, trim: true }], validate: (items) => items.length >= 2 },
-  correctAnswer: { type: Number, required: true, min: 0 },
-}, { _id: true });
+  question: {
+    type: String,
+    required: true,
+  },
 
-const quizSchema = new mongoose.Schema({
-  course: { type: mongoose.Schema.Types.ObjectId, ref: 'Course', required: true, index: true },
-  title: { type: String, required: true, trim: true, maxlength: 120 },
-  questions: { type: [questionSchema], default: [] },
-}, { timestamps: true });
+  options: {
+    type: [String],
+    required: true,
+  },
 
-export default mongoose.model('Quiz', quizSchema);
+  correctAnswer: {
+    type: Number,
+    required: true,
+  },
+
+  marks: {
+    type: Number,
+    default: 1,
+  },
+});
+
+const quizSchema = new mongoose.Schema(
+  {
+    title: { type: String, required: true },
+
+    course: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Course",
+      required: true,
+    },
+
+    questions: [questionSchema],
+
+    duration: {
+      type: Number,
+      default: 30,
+    },
+
+    passingPercentage: {
+      type: Number,
+      default: 40,
+    },
+  },
+  { timestamps: true }
+);
+
+module.exports = mongoose.model("Quiz", quizSchema);

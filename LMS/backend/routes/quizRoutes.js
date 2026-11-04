@@ -1,10 +1,33 @@
-import { Router } from 'express';
-import { createQuiz, listCourseQuizzes, submitQuiz } from '../controllers/quizController.js';
-import { protect } from '../middleware/authMiddleware.js';
-import { requireRole } from '../middleware/roleMiddleware.js';
+const express = require("express");
+const protect = require("../middleware/authMiddleware");
+const authorize = require("../middleware/roleMiddleware");
 
-const router = Router();
-router.get('/course/:courseId', protect, listCourseQuizzes);
-router.post('/course/:courseId', protect, requireRole('instructor', 'admin'), createQuiz);
-router.post('/:id/submit', protect, requireRole('learner'), submitQuiz);
-export default router;
+const {
+  createQuiz,
+  getCourseQuizzes,
+  getQuiz,
+} = require("../controllers/quizController");
+
+const router = express.Router();
+
+router.post(
+  "/",
+  protect,
+  authorize("instructor", "admin"),
+  createQuiz
+);
+
+router.get(
+  "/course/:courseId",
+  protect,
+  getCourseQuizzes
+);
+
+router.get(
+  "/:id",
+  protect,
+  authorize("student"),
+  getQuiz
+);
+
+module.exports = router;

@@ -1,62 +1,64 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { api } from '../services/api.js';
-
-const emptyCourse = { title: '', description: '', category: '', level: 'Beginner', lessons: '' };
+import { useEffect, useState } from "react";
+import DashboardLayout from "../layouts/DashboardLayout";
+import api from "../services/api";
+import { Link } from "react-router-dom";
 
 export default function InstructorDashboard() {
   const [courses, setCourses] = useState([]);
-  const [form, setForm] = useState(emptyCourse);
-  const [error, setError] = useState('');
-  const [notice, setNotice] = useState('');
-  const [busy, setBusy] = useState(false);
 
-  async function loadCourses() {
-    try {
-      const { courses: data } = await api('/courses/mine');
-      setCourses(data);
-    } catch (requestError) {
-      setError(requestError.message);
-    }
-  }
-  useEffect(() => { loadCourses(); }, []);
+  useEffect(() => {
+    api.get("/courses")
+      .then((res) => setCourses(res.data));
+  }, []);
 
-  async function submit(event) {
-    event.preventDefault();
-    setBusy(true);
-    setError('');
-    setNotice('');
+  const createCourse = async () => {
+    const title = prompt("Enter course title:");
+    const description = prompt("Enter course description:");
+
+    if (!title || !description) return;
+
     try {
-      const lessons = form.lessons.split('\n').map((title) => title.trim()).filter(Boolean).map((title) => ({ title }));
-      await api('/courses', { method: 'POST', body: { ...form, lessons } });
-      setForm(emptyCourse);
-      setNotice('Course created.');
-      await loadCourses();
-    } catch (requestError) {
-      setError(requestError.message);
-    } finally {
-      setBusy(false);
+      const res = await api.post("/courses", {
+        title,
+        description,
+        category: "General",
+        level: "Beginner",
+        lessons: [],
+      });
+
+      setCourses((prev) => [...prev, res.data]);
+    } catch (error) {
+      alert(error.response?.data?.message || "Failed to create course.");
     }
-  }
+  };
 
   return (
-    <section className="section">
-      <p className="eyebrow">INSTRUCTOR DASHBOARD</p><h1>Manage your courses</h1>
-      {error && <p className="error" role="alert">{error}</p>}
-      {notice && <p className="notice" role="status">{notice}</p>}
-      <form className="form-card form-card-wide" onSubmit={submit}>
-        <h2>Create a course</h2>
-        <label>Course title<input required maxLength={120} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></label>
-        <label>Description<textarea required maxLength={3000} rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></label>
-        <div className="form-row">
-          <label>Category<input required value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} /></label>
-          <label>Level<select value={form.level} onChange={(e) => setForm({ ...form, level: e.target.value })}><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select></label>
-        </div>
-        <label>Lessons (one title per line)<textarea rows={4} value={form.lessons} onChange={(e) => setForm({ ...form, lessons: e.target.value })} /></label>
-        <button className="button" disabled={busy}>{busy ? 'Creating...' : 'Create course'}</button>
-      </form>
-      <h2 className="section">Your courses</h2>
-      {courses.map((course) => <p key={course._id}><Link to={`/courses/${course._id}`}>{course.title}</Link> · {course.published ? 'Published' : 'Draft'}</p>)}
-    </section>
+    <DashboardLayout>
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold">Instructor Dashboard</h1>
+
+        <button
+          onClick={createCourse}
+          className="bg-indigo-600 text-white px-5 py-3 rounded-lg"
+        >
+          + Create Course
+        </button>
+      </div>
+
+      <h2 className="text-2xl font-bold mt-10">Available Courses</h2>
+
+      <div className="grid md:grid-cols-3 gap-6 mt-6">
+        {courses.map((course) => (
+          <div key={course._id} className="bg-white border p-5 rounded-xl">
+            <h3 className="font-bold text-xl">{course.title}</h3>
+            <p className="text-gray-500 mt-2">{course.description}</p>
+            <p className="mt-4">{course.published ? "Published" : "Draft"}</p>
+            <Link to={`/courses/${course._id}`} className="text-indigo-600 mt-3 block">
+              View Course
+            </Link>
+          </div>
+        ))}
+      </div>
+    </DashboardLayout>
   );
 }
