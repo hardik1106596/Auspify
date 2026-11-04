@@ -7,6 +7,7 @@ import Profile from './pages/Profile.jsx';
 import Orders from './pages/Orders.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
 import { useAuth } from './auth/AuthContext.jsx';
+import { apiRequest } from './api.js';
 import {
   ArrowRight,
   BadgeCheck,
@@ -30,7 +31,7 @@ import {
   X,
 } from 'lucide-react';
 
-import { categories, products as demoProducts } from './data';
+import { categories } from './data';
 
 const navigationLinks = [
   ['Home', '#home'],
@@ -689,6 +690,7 @@ function CheckoutModal({
 }
 
 function Storefront() {
+  const { token } = useAuth();
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
   const [products, setProducts] = useState([]);
@@ -712,37 +714,32 @@ const cartCount = cart.reduce(
 );
 
 useEffect(() => {
-    async function fetchProducts() {
-      try {
-        const response = await fetch("http://localhost:5000/api/products");
+    let active = true;
+    apiRequest('/products')
+      .then((data) => {
+        if (!active) return;
+        setProducts(
+          data.map((product) => ({
+            ...product,
+            id: product._id,
+            oldPrice: product.oldPrice ?? product.price,
+            rating: product.rating ?? 4.5,
+            reviews: product.reviews ?? 0,
+            tag: product.featured ? 'Featured' : '',
+          })),
+        );
+        setProductsError('');
+      })
+      .catch((error) => {
+        if (active) setProductsError(error.message);
+      })
+      .finally(() => {
+        if (active) setProductsLoading(false);
+      });
 
-        if (!response.ok) {
-          throw new Error("Unable to load products.");
-        }
-
-        const data = await response.json();
-
-       setProducts(
-        data.map((product) => ({
-          ...product,
-          id: product._id,
-          oldPrice: product.oldPrice ?? product.price,
-          rating: product.rating ?? 4.5,
-          reviews: product.reviews ?? 0,
-          tag: product.featured ? "Featured" : "",
-          source: "database",
-        }))
-      );
-
-        setProductsError("");
-      } catch (error) {
-        setProductsError(error.message || "Unable to load products.");
-      } finally {
-        setProductsLoading(false);
-      }
-    }
-
-    fetchProducts();
+    return () => {
+      active = false;
+    };
   }, []);
 
 
@@ -807,8 +804,6 @@ async function placeOrder(event)
     const email = formData.get("email")?.trim();
     const shippingAddress = formData.get("shippingAddress")?.trim();
 
-    const token = localStorage.getItem("shopverse-token");
-
     if (!token) {
       setCheckoutOpen(false);
       window.location.href = "/login";
@@ -821,26 +816,17 @@ async function placeOrder(event)
     }
 
     try {
-      const response = await fetch("http://localhost:5000/api/orders", {
+      await apiRequest('/orders', {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
+        token,
+        body: {
           items: cart.map((item) => ({
             product: item.id,
             quantity: item.qty,
           })),
           shippingAddress,
-        }),
+        },
       });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Could not place order.");
-      }
 
       setOrderPlaced(true);
       setCart([]);

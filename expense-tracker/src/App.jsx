@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import {
   ArrowDownLeft, ArrowUpRight, Bell, CalendarDays, ChartNoAxesCombined,
   ChevronDown, CircleHelp, CreditCard, LayoutDashboard, LogOut, Menu,
@@ -14,8 +14,6 @@ import { api } from './api.js';
 const money = (value) => new Intl.NumberFormat('en-IN', {
   style: 'currency', currency: 'INR', maximumFractionDigits: 0
 }).format(Number(value || 0));
-
-const monthLabel = (date) => new Date(date).toLocaleDateString('en-IN', { month: 'short' });
 
 const seedTransactions = [
   { _id: '1', title: 'Monthly salary', category: 'Salary', type: 'income', amount: 52000, date: '2026-10-01', note: 'October salary' },
@@ -77,7 +75,7 @@ function App() {
   const totals = useMemo(() => {
     const income = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + Number(t.amount), 0);
     const expenses = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + Number(t.amount), 0);
-    return { income, expenses, balance: income - expenses, count: transactions.length };
+    return { income, expenses, balance: income - expenses };
   }, [transactions]);
 
   const filtered = useMemo(() => transactions.filter(t => {
@@ -139,15 +137,13 @@ function App() {
   };
 
   const handleAuth = async (mode, form) => {
-    try {
-      const data = await api(`/auth/${mode}`, { method: 'POST', body: form });
-      localStorage.setItem('pennywiseToken', data.token);
-      localStorage.setItem('pennywiseUser', JSON.stringify(data.user));
-      setToken(data.token);
-      setUser(data.user);
-      navigate('/');
-      setNotice(`Welcome${data.user.name ? `, ${data.user.name}` : ''}!`);
-    } catch (error) { throw error; }
+    const data = await api(`/auth/${mode}`, { method: 'POST', body: form });
+    localStorage.setItem('pennywiseToken', data.token);
+    localStorage.setItem('pennywiseUser', JSON.stringify(data.user));
+    setToken(data.token);
+    setUser(data.user);
+    navigate('/');
+    setNotice(`Welcome${data.user.name ? `, ${data.user.name}` : ''}!`);
   };
 
   const logout = () => {

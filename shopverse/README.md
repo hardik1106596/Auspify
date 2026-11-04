@@ -15,12 +15,17 @@ npm install
 npm run dev
 ```
 
-Start the backend in a separate terminal:
+Set up the backend environment before starting the API:
 ```powershell
 cd server
 npm install
+copy .env.example .env
 npm run dev
 ```
+
+Edit `server/.env` and set `MONGODB_URI` and a random `JWT_SECRET` of at least 32 characters. The API defaults to port 5000 and allows the Vite app at `http://localhost:5173`. To use another API URL in the frontend, set `VITE_API_URL` in the ShopVerse root `.env` file and restart Vite.
+
+The storefront loads its catalog from MongoDB. To populate it with the sample products, run `node src/seedProducts.js` from the `server` directory.
 
 ### Application Links
 - **Storefront:** http://localhost:5173

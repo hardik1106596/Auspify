@@ -11,9 +11,8 @@ import {
   Search,
   ArrowLeft,
 } from "lucide-react";
+import { apiRequest } from "../api.js";
 import "./AdminDashboard.css";
-
-const API_URL = "http://localhost:5000/api/products";
 
 const emptyForm = {
   name: "",
@@ -41,10 +40,7 @@ export default function AdminDashboard() {
     setError("");
 
     try {
-      const response = await fetch(API_URL);
-      if (!response.ok) throw new Error("Could not load products.");
-
-      const data = await response.json();
+      const data = await apiRequest("/products");
       setProducts(data);
     } catch (err) {
       setError(err.message || "Unable to connect to the API.");
@@ -117,20 +113,10 @@ export default function AdminDashboard() {
         );
       }
 
-      const response = await fetch(
-        editingId ? `${API_URL}/${editingId}` : API_URL,
-        {
-          method: editingId ? "PUT" : "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
+      await apiRequest(
+        editingId ? `/products/${editingId}` : "/products",
+        { method: editingId ? "PUT" : "POST", body: payload }
       );
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || "Could not save product.");
-      }
 
       setShowForm(false);
       setForm(emptyForm);
@@ -155,14 +141,7 @@ export default function AdminDashboard() {
     setNotice("");
 
     try {
-      const response = await fetch(`${API_URL}/${product._id}`, {
-        method: "DELETE",
-      });
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || "Could not delete product.");
-      }
+      await apiRequest(`/products/${product._id}`, { method: "DELETE" });
 
       setNotice("Product deleted.");
       await loadProducts();
